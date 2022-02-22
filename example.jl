@@ -1,14 +1,15 @@
-# recreate the R package functions 
+# without module, do:
+# using Graphs, MetaGraphs
+# using CairoMakie, GraphMakie, NetworkLayout, Colors, ColorSchemes
 
-using Graphs, MetaGraphs
-using CairoMakie, GraphMakie, NetworkLayout, Colors, ColorSchemes
+# # load package functions
+# include("radius.jl")
+# include("sampling.jl")
+# include("plotting.jl")
+# include("context.jl")
+# include("whole_network.jl")
 
-# load package functions
-include("radius.jl")
-include("sampling.jl")
-include("plotting.jl")
-include("context.jl")
-include("whole_network.jl")
+using Graphs, MetaGraphs, SamplingPerceivedNetworks
 
 # setup the test network
 graph = watts_strogatz(100, 4, 0.3)
