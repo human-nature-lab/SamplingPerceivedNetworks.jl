@@ -40,7 +40,13 @@ function _vertexradius!(rad, graph, v)
     return rad
 end
 
-function vertexradius_d(rad, d)
+"""
+        vertexradius_d(rad, d) where T <: MetaGraph
+
+Restrict the social radius for a node to the ties that come into existence at
+d. That is, capture only the ties that form at d as we move from 1 to dmax. This is the marginal set of ties, removing those above d and and those that exist at d-1,...,1. Where rad is the output graph from vertexradius().
+"""
+function vertexradius_d(rad::T, d) where T <: MetaGraph
     radᵢ = deepcopy(rad);
 
     einc = fill(false, length(edges(rad)));
@@ -104,6 +110,12 @@ function addreals!(gₘₐₓ, gd, d)
     return gd
 end
 
+"""
+        maxnet(graph, v, dₘₐₓ)
+
+Construct the ego network for vertex (v) out to dₘₐₓ, and add counterfactual
+ties. Label each tie as real or counterfactual with a boolean for real.
+"""
 function maxnet(graph, v, dₘₐₓ)
 
     gₘₐₓ = egonet(graph, v, dₘₐₓ)

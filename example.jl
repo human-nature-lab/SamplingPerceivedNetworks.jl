@@ -1,5 +1,8 @@
 # example.jl
-# author: eric martin feltham, eric.feltham@yale.edu
+# basic example for perceived network sampling from an underlying
+# sociocentric network
+# author: eric martin feltham
+# contact: eric.feltham@yale.edu
 # date: 2022-02-21
 
 using Graphs, MetaGraphs, SamplingPerceivedNetworks
@@ -22,7 +25,7 @@ get_prop(graph, v, :name) # check the vertex name
 
 rad = vertexradius(graph, v, dₘₐₓ); # generate the social radius of v
 
-# pick degree to view
+# pick degree to view (from 1 to dmax)
 d = 1
 radiusd = vertexradius_d(rad, d);
 
@@ -49,7 +52,8 @@ cogls, degls, real_ls = samplebins(
     moreinfo = true
 );
 
-# sampling list for each vertex in the network
+# generate a sampling list for each vertex in the network
+
 vertlists = samplenetwork(
     graph;
     desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
