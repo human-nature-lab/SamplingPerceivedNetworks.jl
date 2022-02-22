@@ -1,2 +1,2 @@
 # SamplingPerceivedNetworks.jl
-Sampling procedure for Cognitive Social Structures data collection.
+Sampling procedure for cognitive social structures data collection.
