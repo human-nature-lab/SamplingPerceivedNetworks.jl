@@ -4,6 +4,7 @@ module SamplingPerceivedNetworks
 
     using Graphs, MetaGraphs
     using CairoMakie, GraphMakie, NetworkLayout, Colors, ColorSchemes
+    import StatsBase.sample
 
     include("radius.jl")
     include("plotting.jl")
