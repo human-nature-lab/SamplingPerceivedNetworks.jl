@@ -10,7 +10,7 @@ function setuplists(dₘₐₓ)
     return population
 end
 
-function samplingbins(orbit)
+function samplingbins(orbit, dₘₐₓ)
     population = setuplists(dₘₐₓ)
     _samplingbins!(population, orbit)
     return population

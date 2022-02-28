@@ -5,7 +5,7 @@
 
 """
         samplenetwork(
-            graph;
+            graph, dₘₐₓ;
             desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
             moreinfo = false
         )
@@ -39,7 +39,7 @@ end
 function _samplenet!(verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo)
     for v in vertices(graph)
         rad = vertexradius(graph, v, dₘₐₓ);
-        bins = samplingbins(rad)
+        bins = samplingbins(rad, dₘₐₓ)
     
         verticeslists[get_prop(graph, v, :name)] = samplebins(
             bins;

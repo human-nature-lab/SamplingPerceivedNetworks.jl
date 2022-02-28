@@ -43,7 +43,7 @@ CairoMakie.save("context.svg", f_cont, px_per_unit = 2)
 
 # sampling
 
-bins = samplingbins(rad)
+bins = samplingbins(rad, dₘₐₓ)
 
 # more info: dels, real_ls
 cogls, degls, real_ls = samplebins(
@@ -55,7 +55,7 @@ cogls, degls, real_ls = samplebins(
 # generate a sampling list for each vertex in the network
 
 vertlists = samplenetwork(
-    graph;
+    graph, dₘₐₓ;
     desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
     moreinfo = true
 );

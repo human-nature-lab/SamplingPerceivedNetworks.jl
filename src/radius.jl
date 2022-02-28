@@ -21,7 +21,7 @@ function vertexradius(graph::T, vertex, dₘₐₓ; index = true) where T <: Met
     end
 
     rad = maxnet(graph, v, dₘₐₓ)
-    _vertexradius!(rad, graph, v)
+    _vertexradius!(rad, dₘₐₓ, graph, v)
 
     # remove the perceiver
     v = rad[vname, :name]
@@ -30,7 +30,7 @@ function vertexradius(graph::T, vertex, dₘₐₓ; index = true) where T <: Met
     return rad
 end
 
-function _vertexradius!(rad, graph, v)
+function _vertexradius!(rad, dₘₐₓ, graph, v)
     for d in dₘₐₓ - 1 : -1 : 1
         gd = egonet(graph, v, d)
         
