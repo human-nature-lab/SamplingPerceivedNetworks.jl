@@ -55,7 +55,7 @@ function samplebins(
         gap = ws - ts # num. units still wanted, try to pick these up
 
         rnum = min(length(realset), rw + gap)
-        append!(coglist, sample(realset, rnum))
+        append!(coglist, sample(realset, rnum; replace = false))
         
         if moreinfo
             append!(degrees, fill(d, rnum))
@@ -67,7 +67,7 @@ function samplebins(
         
         gap = ws - ts # num. units still wanted, try to pick these up
         fnum = min(length(fakeset), fw + gap)
-        append!(coglist, sample(fakeset, fnum))
+        append!(coglist, sample(fakeset, fnum; replace = false))
 
         if moreinfo
             append!(degrees, fill(d, fnum))
