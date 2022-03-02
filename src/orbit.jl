@@ -1,17 +1,17 @@
-# radius.jl
+# orbit.jl
 
-# perceiver's social radius
+# perceiver's social orbit
 
 """
-        vertexradius(graph::T, vertex, dₘₐₓ; index = true) where T <: MetaGraph
+        vertexorbit(graph::T, vertex, dₘₐₓ; index = true) where T <: MetaGraph
 
-Generate the social radius for a node (vertex) on an undirected,
-unweighted network (graph, of type MetaGraph). The radius extends to individuals at d_max away from the perceiver node.
+Generate the social orbit for a node (vertex) on an undirected,
+unweighted network (graph, of type MetaGraph). The orbit extends to individuals at d_max away from the perceiver node.
 
 if index is true, vertex refers to the index of the vertex; otherwise,
 vertex refers to the name of the node.
 """
-function vertexradius(graph::T, vertex, dₘₐₓ; index = true) where T <: MetaGraph
+function vertexorbit(graph::T, vertex, dₘₐₓ; index = true) where T <: MetaGraph
     if index
         vname = get_prop(graph, vertex, :name)
         v = vertex
@@ -21,7 +21,7 @@ function vertexradius(graph::T, vertex, dₘₐₓ; index = true) where T <: Met
     end
 
     rad = maxnet(graph, v, dₘₐₓ)
-    _vertexradius!(rad, dₘₐₓ, graph, v)
+    _vertexorbit!(rad, dₘₐₓ, graph, v)
 
     # remove the perceiver
     v = rad[vname, :name]
@@ -30,7 +30,7 @@ function vertexradius(graph::T, vertex, dₘₐₓ; index = true) where T <: Met
     return rad
 end
 
-function _vertexradius!(rad, dₘₐₓ, graph, v)
+function _vertexorbit!(rad, dₘₐₓ, graph, v)
     for d in dₘₐₓ - 1 : -1 : 1
         gd = egonet(graph, v, d)
         
@@ -41,12 +41,12 @@ function _vertexradius!(rad, dₘₐₓ, graph, v)
 end
 
 """
-        vertexradius_d(rad, d) where T <: MetaGraph
+        vertexorbit_d(rad, d) where T <: MetaGraph
 
-Restrict the social radius for a node to the ties that come into existence at
-d. That is, capture only the ties that form at d as we move from 1 to dmax. This is the marginal set of ties, removing those above d and and those that exist at d-1,...,1. Where rad is the output graph from vertexradius().
+Restrict the social orbit for a node to the ties that come into existence at
+d. That is, capture only the ties that form at d as we move from 1 to dmax. This is the marginal set of ties, removing those above d and and those that exist at d-1,...,1. Where rad is the output graph from vertexorbit().
 """
-function vertexradius_d(rad::T, d) where T <: MetaGraph
+function vertexorbit_d(rad::T, d) where T <: MetaGraph
     radᵢ = deepcopy(rad);
 
     einc = fill(false, length(edges(rad)));

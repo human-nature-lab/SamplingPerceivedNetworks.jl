@@ -1,13 +1,13 @@
 # context.jl
 
 """
-        context_graph(graph, radiusd, vertex; index = true)
+        context_graph(graph, orbitd, vertex; index = true)
 
 Make a new graph object containing the whole graph, with properties
-on the edges indicating the perceived and real ties in the social radius of
+on the edges indicating the perceived and real ties in the social orbit of
 vertex v.
 """
-function context_graph(graph, radiusd, vertex; index = true)
+function context_graph(graph, orbitd, vertex; index = true)
 
     gcon = deepcopy(graph)
 
@@ -23,19 +23,19 @@ function context_graph(graph, radiusd, vertex; index = true)
         set_prop!(gcon, ν, :noded, -1)
     end
 
-    for e in edges(radiusd)
+    for e in edges(orbitd)
 
-        snme = get_prop(radiusd, src(e), :name)
-        dnme = get_prop(radiusd, dst(e), :name)
+        snme = get_prop(orbitd, src(e), :name)
+        dnme = get_prop(orbitd, dst(e), :name)
 
         srce = gcon[snme, :name]
         dest = gcon[dnme, :name]
 
-        if !get_prop(radiusd, e, :real)
+        if !get_prop(orbitd, e, :real)
             fk = :fake
             newe = Edge(srce, dest)
             add_edge!(gcon, newe)
-        elseif get_prop(radiusd, e, :real)
+        elseif get_prop(orbitd, e, :real)
             fk = :real
             if has_edge(graph, srce, dest)
                 newe = Edge(srce, dest)
@@ -46,11 +46,11 @@ function context_graph(graph, radiusd, vertex; index = true)
         end
 
         set_prop!(gcon, newe, :tiestatus, fk)
-        set_prop!(gcon, newe, :d, get_prop(radiusd, e, :d))
+        set_prop!(gcon, newe, :d, get_prop(orbitd, e, :d))
 
-        # indicate that node is in the social radius
-        assign_nodestatus!(gcon, radiusd, e, srce)
-        assign_nodestatus!(gcon, radiusd, e, dest)
+        # indicate that node is in the social orbit
+        assign_nodestatus!(gcon, orbitd, e, srce)
+        assign_nodestatus!(gcon, orbitd, e, dest)
 
     end
     
@@ -67,13 +67,13 @@ function context_graph(graph, radiusd, vertex; index = true)
     return gcon
 end
 
-function assign_nodestatus!(gcon, radiusd, e, vertex)
+function assign_nodestatus!(gcon, orbitd, e, vertex)
     set_prop!(gcon, vertex, :nodestatus, :inside)
     sprop = get_prop(gcon, vertex, :noded)
     if sprop == -1
-        set_prop!(gcon, vertex, :noded, get_prop(radiusd, e, :d))
-    elseif (sprop != -1) & (get_prop(radiusd, e, :d) < sprop)
-        set_prop!(gcon, vertex, :noded, get_prop(radiusd, e, :d))
+        set_prop!(gcon, vertex, :noded, get_prop(orbitd, e, :d))
+    elseif (sprop != -1) & (get_prop(orbitd, e, :d) < sprop)
+        set_prop!(gcon, vertex, :noded, get_prop(orbitd, e, :d))
     end
    return gcon 
 end

@@ -6,15 +6,15 @@ module SamplingPerceivedNetworks
     using CairoMakie, GraphMakie, NetworkLayout, Colors, ColorSchemes
     import StatsBase.sample
 
-    include("radius.jl")
+    include("orbit.jl")
     include("plotting.jl")
     include("context.jl")
     include("sampling.jl")
     include("whole_network.jl")
 
     export
-        vertexradius, vertexradius_d,
+        vertexorbit, vertexorbit_d,
         context_graph,
-        plot_radius_d, plot_context,
+        plot_orbit_d, plot_context,
         samplingbins, samplebins, samplenetwork
 end

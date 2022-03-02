@@ -1,4 +1,4 @@
-# example.jl
+# base example.jl
 # basic example for perceived network sampling from an underlying
 # sociocentric network
 # author: eric martin feltham
@@ -6,7 +6,7 @@
 # date: 2022-02-21
 
 # you don't need to run this line
-# import Pkg; Pkg.activate(pwd())
+import Pkg; Pkg.activate(pwd())
 
 using Graphs, MetaGraphs, SamplingPerceivedNetworks, CairoMakie
 import StatsBase.sample
@@ -42,23 +42,23 @@ v = 1; dₘₐₓ = 4;
 
 get_prop(graph, v, :name) # check the vertex name (since we picked the person's index)
 
-rad = vertexradius(graph, v, dₘₐₓ); # generate the social radius of v
+rad = vertexorbit(graph, v, dₘₐₓ); # generate the social orbit of v
 
 # pick degree to view (from 1 to dmax)
-d = 1
+d = 2
 
 # create the graph of relationships at d
-radiusd = vertexradius_d(rad, d);
+orbitd = vertexorbit_d(rad, d);
 
 # check the included nodes at d
-[get_prop(radiusd, vtx, :name) for vtx in vertices(radiusd)]
+[get_prop(orbitd, vtx, :name) for vtx in vertices(orbitd)]
 
 # visualize the set of relationships at d degrees away from person v
-plot_radius_d(radiusd)
+plot_orbit_d(orbitd)
 
-# plot the social radius of v on the whole network
-# this shows radiusd in the context of the larger social network
-gcon = context_graph(graph, radiusd, v; index = true);
+# plot the social orbit of v on the whole network
+# this shows orbitd in the context of the larger social network
+gcon = context_graph(graph, orbitd, v; index = true);
 
 f_cont = plot_context(gcon);
 
@@ -88,6 +88,9 @@ cogls, degls, real_ls = samplebins(
     desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
     moreinfo = true
 );
+
+idx = sortperm(cogls)
+hcat(cogls, degls, real_ls)[idx, :]
 
 # generate a sampling list for each vertex in the network
 # now, instead of focusing on person v, look at the whole network
