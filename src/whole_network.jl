@@ -2,7 +2,6 @@
 
 # sampling lists for the whole network
 
-
 """
         samplenetwork(
             graph;

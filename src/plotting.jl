@@ -33,18 +33,16 @@ function plot_orbit_d(radᵢ)
 end
 
 """
-        plot_context(gcon)
-
+        plot_context(gcon; layout = nothing)
 Plot the context graph for a given vertex, and a specified marginal set of ties
 that exist at degree d away from the perceiver. gcon is the output of
 context_graph(). Ties that exist are displayed in green, counterfactual ties in
 orange; those that are outside the social orbit are in grey. The perceiver
 node is presented in green, those inside the social orbit are in blue, and
 those outside are in pale yellow.
-
 cf. context_graph
 """
-function plot_context(gcon)
+function plot_context(gcon; layout = nothing)
 
     colors = ColorSchemes.:Set2_8;
 
@@ -86,13 +84,22 @@ function plot_context(gcon)
 
     # layout = Stress()
 
-    graphplot!(
-        ax,
-        gcon,
-        # layout = layout,
-        node_color = nstats,
-        edge_color = estats
-    )
+    if isnothing(layout)
+        graphplot!(
+            ax,
+            gcon,
+            node_color = nstats,
+            edge_color = estats
+        )
+    else
+        graphplot!(
+            ax,
+            gcon,
+            layout = layout,
+            node_color = nstats,
+            edge_color = estats
+        )
+    end
 
     hidedecorations!(ax); hidespines!(ax);
     ax.aspect = DataAspect();
