@@ -28,10 +28,10 @@ function samplenetwork(
 
     dₘₐₓ = maximum(reduce(vcat, dvals))
 
-    if !moreinfo
-        verticeslists = Dict{String, Vector{Tuple{String, String}}}()
+    verticeslists = if !moreinfo
+        Dict{String, Vector{Tuple{String, String}}}()
     else
-        verticeslists = Dict{String, Tuple{Vector{Tuple{String, String}}, Vector{Union{Int, UnitRange}}, Vector{Bool}}}()
+        Dict{String, Tuple{Vector{Tuple{String, String}}, Vector{Union{Int, UnitRange}}, Vector{Bool}}}()
     end
     
     sizehint!(verticeslists, nv(graph))
@@ -42,8 +42,8 @@ end
 
 function _samplenet!(verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo)
     for v in vertices(graph)
-        rad = vertexorbit(graph, v, dₘₐₓ);
-        bins = samplingbins(rad, dₘₐₓ)
+        rad = vertexorbit(graph, v, dₘₐₓ); # 2.79 MiB
+        bins = samplingbins(rad, dₘₐₓ);
     
         verticeslists[get_prop(graph, v, :name)] = samplebins(
             bins;
