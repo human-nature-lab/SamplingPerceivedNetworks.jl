@@ -5,11 +5,14 @@
 # contact: eric.feltham@yale.edu
 # date: 2022-02-21
 
-# you don't need to run this line
+# you may not need need to run this line
 import Pkg; Pkg.activate(pwd())
 
-using Graphs, MetaGraphs, SamplingPerceivedNetworks, CairoMakie
+using Graphs, MetaGraphs, SamplingPerceivedNetworks, CairoMakie, Random
 import StatsBase.sample
+
+# so that the lists are generated in a reproducible way
+Random.seed!(2022)
 
 #=
 setup the test network
@@ -40,7 +43,8 @@ who could possibly be in ties that we want to sample.
 =#
 v = 1; dₘₐₓ = 4;
 
-get_prop(graph, v, :name) # check the vertex name (since we picked the person's index)
+# check the vertex name (since we picked the person's index):
+get_prop(graph, v, :name) 
 
 rad = vertexorbit(graph, v, dₘₐₓ); # generate the social orbit of v
 
@@ -89,8 +93,8 @@ cogls, degls, real_ls = samplebins(
     moreinfo = true
 );
 
-idx = sortperm(cogls)
-hcat(cogls, degls, real_ls)[idx, :]
+# idx = sortperm(cogls)
+# hcat(cogls, degls, real_ls)[idx, :]
 
 # generate a sampling list for each vertex in the network
 # now, instead of focusing on person v, look at the whole network
@@ -100,3 +104,7 @@ vertlists = samplenetwork(
     desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
     moreinfo = true
 );
+
+import JLD2; JLD2.save_object("test.jld2", vertlists);
+
+import JLD2; old = JLD2.load_object("test.jld2");
