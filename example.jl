@@ -105,6 +105,6 @@ vertlists = samplenetwork(
     moreinfo = true
 );
 
-import JLD2; JLD2.save_object("test.jld2", vertlists);
+# import JLD2; JLD2.save_object("test.jld2", vertlists);
 
-import JLD2; old = JLD2.load_object("test.jld2");
+# import JLD2; old = JLD2.load_object("test.jld2");
