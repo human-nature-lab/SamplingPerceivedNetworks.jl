@@ -55,11 +55,15 @@ function _samplenet!(
         )
 
         if shuffle
-            ln = length(verticeslists[get_prop(graph, v, :name)]);
-            # shuffle the pairs for random presentation
-            idx = sample(collect(1:ln), ln; replace = false)
-            for i in eachindex(verticeslists[get_prop(graph, v, :name)])
-                permute!(verticeslists[get_prop(graph, v, :name)][i], idx)
+            # length of the list of pairs
+            ln = length(verticeslists[get_prop(graph, v, :name)][1]);
+            if ln > 1 # if there is more than one valid pair
+                # shuffle the pairs for random presentation
+                idx = sample(collect(1:ln), ln; replace = false)
+                # iterate over the info types (pairs, degree, realness)
+                for i in eachindex(verticeslists[get_prop(graph, v, :name)])
+                    permute!(verticeslists[get_prop(graph, v, :name)][i], idx)
+                end
             end
         end
     end
