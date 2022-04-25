@@ -6,7 +6,8 @@
         samplenetwork(
             graph;
             desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
-            moreinfo = false
+            moreinfo = false,
+            shuffle = true
         )
 
 Given an unweighted and undirected sociocentric network, generate
@@ -23,7 +24,8 @@ The format is (# real, # counterfactual)).
 function samplenetwork(
     graph;
     desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
-    moreinfo = false
+    moreinfo = false,
+    shuffle = true
 )    
 
     dₘₐₓ = maximum(reduce(vcat, dvals))
@@ -35,12 +37,14 @@ function samplenetwork(
     end
     
     sizehint!(verticeslists, nv(graph))
-    _samplenet!(verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo)
+    _samplenet!(verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo, shuffle)
     
     return verticeslists
 end
 
-function _samplenet!(verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo)
+function _samplenet!(
+    verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo, shuffle
+)
     for v in vertices(graph)
         rad = vertexorbit(graph, v, dₘₐₓ); # 2.79 MiB
         bins = samplingbins(rad, dₘₐₓ);
@@ -49,5 +53,13 @@ function _samplenet!(verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo)
             bins;
             desired = desired, dvals = dvals, moreinfo = moreinfo
         )
+
+        if shuffle
+            # shuffle the pairs for random presentation
+            idx = sample(collect(1:length(X[1])), length(X[1]); replace = false)
+            for i in eachindex(verticeslists[get_prop(graph, v, :name)])
+                permute!(verticeslists[get_prop(graph, v, :name)][i], idx)
+            end
+        end
     end
 end

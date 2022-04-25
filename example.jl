@@ -102,7 +102,8 @@ cogls, degls, real_ls = samplebins(
 vertlists = samplenetwork(
     graph;
     desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
-    moreinfo = true
+    moreinfo = true,
+    shuffle = true,
 );
 
 # import JLD2; JLD2.save_object("test.jld2", vertlists);
