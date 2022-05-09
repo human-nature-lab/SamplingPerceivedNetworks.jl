@@ -27,9 +27,14 @@ graph = watts_strogatz(100, 4, 0.3)
 graph = MetaGraph(graph)
 
 # add names for test network
+using Downloads, DataFrames; import CSV
+http_response = Downloads.download("https://raw.githubusercontent.com/hadley/data-baby-names/master/baby-names.csv");
+namedat = CSV.File(http_response) |> DataFrame;
+babynames = sample(unique(namedat.name), nv(graph); replace = false);
+
 # e.g., "John_1", "John_2", ..., "John_N" are all people in this network
-for i in 1:nv(graph)
-    set_prop!(graph, i, :name, "John" * "_" * string(i))
+for (i, nme) in zip(1:nv(graph), babynames)
+    set_prop!(graph, i, :name, nme)
 end
 
 ## end setup test network
@@ -44,7 +49,7 @@ who could possibly be in ties that we want to sample.
 v = 1; dₘₐₓ = 4;
 
 # check the vertex name (since we picked the person's index):
-get_prop(graph, v, :name) 
+get_prop(graph, v, :name)
 
 rad = vertexorbit(graph, v, dₘₐₓ); # generate the social orbit of v
 
@@ -109,3 +114,11 @@ vertlists = samplenetwork(
 # import JLD2; JLD2.save_object("test.jld2", vertlists);
 
 # import JLD2; old = JLD2.load_object("test.jld2");
+
+# edgelists: sampling lists for egos; sociocentric graph
+pel = psn_edgelists(vertlists)
+el = edgelist(graph)
+
+for (e, z) in zip([el, pel], ["el", "pel"])
+    CSV.write(z * ".csv",  e)
+end
