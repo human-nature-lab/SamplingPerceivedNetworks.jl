@@ -84,3 +84,62 @@ function samplebins(
         return coglist
     end
 end
+
+function samplebins(
+    rng,
+    bins;
+    desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
+    moreinfo = false
+)
+
+    if moreinfo
+        degrees = Vector{Union{Int, UnitRange{Int}}}()
+        realness = Vector{Bool}()
+    end
+
+    coglist = Vector{Tuple{String, String}}()
+    
+    ws = 0; ts = 0;
+
+    for (sz, d) in zip(desired, dvals)
+        rw, fw = sz
+        if typeof(d) == UnitRange{Int}
+            fakeset = reduce(vcat, [bins[x, false] for x in d]);
+            realset = reduce(vcat, [bins[x, true] for x in d]);
+        else
+            fakeset = bins[d, false];
+            realset = bins[d, true];
+        end
+
+        gap = ws - ts # num. units still wanted, try to pick these up
+
+        rnum = min(length(realset), rw + gap)
+        append!(coglist, sample(rng, realset, rnum; replace = false))
+        
+        if moreinfo
+            append!(degrees, fill(d, rnum))
+            append!(realness, fill(true, rnum))
+        end
+        
+        ws += rw # total wanted up to this point
+        ts += rnum # add number actually sampled
+        
+        gap = ws - ts # num. units still wanted, try to pick these up
+        fnum = min(length(fakeset), fw + gap)
+        append!(coglist, sample(rng, fakeset, fnum; replace = false))
+
+        if moreinfo
+            append!(degrees, fill(d, fnum))
+            append!(realness, fill(false, fnum))
+        end
+
+        ws += fw # total wanted up to this point
+        ts += fnum # add number actually sampled (including possibly extra for gap)
+    end
+
+    if moreinfo
+        return coglist, degrees, realness
+    else
+        return coglist
+    end
+end
