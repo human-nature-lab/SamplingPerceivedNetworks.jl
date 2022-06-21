@@ -2,7 +2,7 @@
 
 module SamplingPerceivedNetworks
 
-    using Graphs, MetaGraphs
+    using Graphs, MetaGraphs, Random
     using CairoMakie, GraphMakie, NetworkLayout, Colors, ColorSchemes
     import StatsBase.sample
 
