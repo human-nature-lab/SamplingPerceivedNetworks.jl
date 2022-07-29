@@ -127,6 +127,7 @@ function _samplenet!(
     seeds,
     verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo, shuffle
 )
+    # (v, seed) = collect(zip(vertices(graph), seeds))[1]
     for (v, seed) in zip(vertices(graph), seeds)
         rad = vertexorbit(graph, v, dₘₐₓ); # 2.79 MiB
         bins = samplingbins(rad, dₘₐₓ);
@@ -139,7 +140,8 @@ function _samplenet!(
 
         if shuffle
             # length of the list of pairs
-            ln = length(verticeslists[get_prop(graph, v, :name)][1]);
+            # drop [1] index since we don't keep (pairs, degree, realness) -> only pairs
+            ln = length(verticeslists[get_prop(graph, v, :name)]);
             if ln > 1 # if there is more than one valid pair
                 # shuffle the pairs for random presentation
                 idx = sample(
@@ -147,9 +149,9 @@ function _samplenet!(
                     replace = false
                 )
                 # iterate over the info types (pairs, degree, realness)
-                for i in eachindex(verticeslists[get_prop(graph, v, :name)])
-                    permute!(verticeslists[get_prop(graph, v, :name)][i], idx)
-                end
+                # we don't store all of these for branch "Server"
+                # so don't iterate
+                permute!(verticeslists[get_prop(graph, v, :name)], idx)
             end
         end
     end
