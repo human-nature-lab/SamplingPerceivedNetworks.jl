@@ -11,12 +11,12 @@ unweighted network (graph, of type MetaGraph). The orbit extends to individuals 
 if index is true, vertex refers to the index of the vertex; otherwise,
 vertex refers to the name of the node.
 """
-function vertexorbit(graph::T, vertex, dₘₐₓ; index = true) where T <: MetaGraph
+function vertexorbit(graph::T, vertex, dₘₐₓ; index = true, name = :name) where T <: MetaGraph
     if index
-        vname = get_prop(graph, vertex, :name)
+        vname = get_prop(graph, vertex, name)
         v = vertex
     elseif !index
-        v = graph[vertex, :name]
+        v = graph[vertex, name]
         vname = vertex
     end
 
@@ -24,7 +24,7 @@ function vertexorbit(graph::T, vertex, dₘₐₓ; index = true) where T <: Meta
     _vertexorbit!(rad, dₘₐₓ, graph, v)
 
     # remove the perceiver
-    v = rad[vname, :name]
+    v = rad[vname, name]
     rem_vertex!(rad, v)
 
     return rad
