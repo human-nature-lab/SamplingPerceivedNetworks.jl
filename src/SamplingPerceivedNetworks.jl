@@ -10,7 +10,7 @@ module SamplingPerceivedNetworks
     # include("plotting.jl")
     # include("context.jl")
     include("sampling.jl")
-    include("whole_network.jl")
+    include("samplenetwork.jl")
     include("utilities.jl")
 
     export
