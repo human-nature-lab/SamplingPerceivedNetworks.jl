@@ -1,61 +1,4 @@
-# sampling.jl
-
-# sampling bins
-
-function samplingbins(orbit, dₘₐₓ)
-    population = setuplists(dₘₐₓ)
-    _samplingbins!(population, orbit)
-    return population
-end
-
-function samplingbins(orbit, dₘₐₓ, consents)
-    population = setuplists(dₘₐₓ)
-    _samplingbins!(population, orbit, consents)
-    return population
-end
-
-function setuplists(dₘₐₓ)
-    population = Dict{Tuple{Int, Bool}, Vector{Tuple{String, String}}}()
-    for s in Iterators.product(1:dₘₐₓ, [true, false])
-        population[s] = Vector{Tuple{String, String}}()
-    end
-    return population
-end
-
-function _samplingbins!(population, orbit)
-    for e in edges(orbit)
-        d, rl = get_prop(orbit, e, :d), get_prop(orbit, e, :real)
-        p1, p2 = get_prop(orbit, src(e), :name), get_prop(orbit, dst(e), :name)
-        push!(population[d, rl], (p1, p2))
-    end
-end
-
-function _samplingbins!(population, orbit, consents)
-    for e in edges(orbit)
-        d, rl = get_prop(orbit, e, :d), get_prop(orbit, e, :real)
-        p1, p2 = get_prop(orbit, src(e), :name), get_prop(orbit, dst(e), :name)
-
-        # only add if both nodes have consented to photo
-        if consented(p1, p2, consents)
-            push!(population[d, rl], (p1, p2))
-        end
-    end
-end
-
-"""
-        consented!(p1, p2, consents)
-
-Check whether a node in the pair has not consented. If so, signal 'false'.
-"""
-function consented(p1, p2, consents)
-    return if (consents[p1] != 2) | (consents[p2] != 2)
-        false
-    else
-        true
-    end
-end
-
-# sampling
+# samplebins.jl
 
 function samplebins(
     bins;
@@ -115,6 +58,35 @@ function samplebins(
     end
 end
 
+"""
+        samplebins(
+            [rng],
+            bins;
+            desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
+            moreinfo = false
+        )
+
+Assumes that `dvals` is monotonically ordered.
+
+Sample from `bins` to generate the CSS list for a perceiver (surveyee), as a series of pairs. Optionally, output `moreinfo`: the degree distance and reality of the tie.
+
+If `rng` is specified, use the same rng value for each call to sample. This will
+be the perceiver's rng value assigned earlier in the procedure.
+N.B. that sample is not called on the same list twice, so it is fine to specify one number in the argument to sample.
+
+When a bin, given as (reality, degree), is smaller than the desired number, other bins are oversampled so that 40 (or the maximum possible number) is reached for that survey.
+
+Compensation procedure:
+- try to get as many as possible from the real bin, then try to fill that gap with oversampling for the fake bin for that same degree. If there is a gap, roll that over and try to oversample real ties at the next degree.
+
+Arguments
+≡≡≡≡≡≡≡≡≡≡≡
+- [rng]
+- bins: full sampling bins from which to sample
+- desired
+- dvals
+- moreinfo
+"""
 function samplebins(
     rng,
     bins;
@@ -122,28 +94,48 @@ function samplebins(
     moreinfo = false
 )
 
+    # if moreinfo, initialize objects for storage
     if moreinfo
         degrees = Vector{Union{Int, UnitRange{Int}}}()
         realness = Vector{Bool}()
     end
 
+    # initialize object for list storage
     coglist = Vector{Tuple{String, String}}()
     
+    #=
+    tie sample counting
+    - used to account for smaller-than-desired bins and consequent
+      oversampling of other bins to fill the gap.
+    
+    ws: total wanted up to that point
+    ts: number actually sampled up to that point
+    (ws - ts) gives the sampling gap
+    =#
     ws = 0; ts = 0;
 
     for (sz, d) in zip(desired, dvals)
-        rw, fw = sz
+        rw, fw = sz # real wanted, fake wanted
+
+        # setup: get the relevant object from which to sample
+
         if typeof(d) == UnitRange{Int}
+            # if it is a range, take the union of the degree bins over the range
             fakeset = reduce(vcat, [bins[x, false] for x in d]);
             realset = reduce(vcat, [bins[x, true] for x in d]);
         else
+            # if a single degree, just take the bin
             fakeset = bins[d, false];
             realset = bins[d, true];
         end
 
-        gap = ws - ts # num. units still wanted, try to pick these up
+        # execution: perform sampling, adjusting for ws and ts
 
-        rnum = min(length(realset), rw + gap)
+        # real ties
+
+        gap = ws - ts # num. units still wanted (try to pick these up)
+
+        rnum = min(length(realset), rw + gap) # this is the number that will actually be sampled at this step
         append!(coglist, sample(rng, realset, rnum; replace = false))
         
         if moreinfo
@@ -151,10 +143,20 @@ function samplebins(
             append!(realness, fill(true, rnum))
         end
         
-        ws += rw # total wanted up to this point
-        ts += rnum # add number actually sampled
+        # total wanted up to this point (wholly determined by dvals)
+        ws += rw
+
+        #=
+        add number actually sampled
+        including possibly extra for gap -> rnum will include the portion of the gap that has been filled 
+        We simply want to add the number sampled, to know whether we have closed the gap, and need to continue
+        to overample)
+        =#
+        ts += rnum
         
-        gap = ws - ts # num. units still wanted, try to pick these up
+        # fake ties
+
+        gap = ws - ts # num. units still wanted (try to pick these up)
         fnum = min(length(fakeset), fw + gap)
         append!(coglist, sample(rng, fakeset, fnum; replace = false))
 
@@ -164,7 +166,7 @@ function samplebins(
         end
 
         ws += fw # total wanted up to this point
-        ts += fnum # add number actually sampled (including possibly extra for gap)
+        ts += fnum # add number actually sampled
     end
 
     if moreinfo

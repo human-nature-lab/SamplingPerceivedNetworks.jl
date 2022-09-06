@@ -9,7 +9,8 @@ module SamplingPerceivedNetworks
     include("orbit.jl")
     # include("plotting.jl")
     # include("context.jl")
-    include("sampling.jl")
+    include("samplingbins.jl")
+    include("samplebins.jl")
     include("samplenetwork.jl")
     include("utilities.jl")
 
