@@ -230,7 +230,7 @@ function _samplenet!(
         if consents[get_prop(graph, v, :name)] != 0
 
             rad = vertexorbit(graph, v, dₘₐₓ); # 2.79 MiB
-            bins = samplingbins(rad, dₘₐₓ);
+            bins = samplingbins(rad, dₘₐₓ, consents);
         
             # only one call per seed number (i.e., one seed per villager)
             verticeslists[get_prop(graph, v, :name)] = samplebins(
