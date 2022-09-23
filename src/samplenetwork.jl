@@ -106,7 +106,9 @@ function _samplenet!(
     
         verticeslists[get_prop(graph, v, :name)] = samplebins(
             bins;
-            desired = desired, dvals = dvals, moreinfo = moreinfo
+            desired = desired,
+            dvals = dvals,
+            moreinfo = moreinfo
         )
 
         if shuffle
@@ -220,20 +222,34 @@ end
 
 function _samplenet!(
     seeds,
-    verticeslists, graph, consents,
-    dₘₐₓ, desired, dvals, moreinfo, shuffle
+    verticeslists,
+    graph,
+    consents,
+    dₘₐₓ,
+    desired,
+    dvals,
+    moreinfo,
+    shuffle
 )
     for (v, seed) in zip(vertices(graph), seeds)
 
         # if consent[node_name] == 0 then skip, since
         # the person will not be surveyed for css
-        if consents[get_prop(graph, v, :name)] != 0
+        nodename = get_prop(graph, v, :name)
 
-            rad = vertexorbit(graph, v, dₘₐₓ); # 2.79 MiB
+        # consent states:         
+        # 0: not consented to either
+        # 1: consented to survey
+        # 2: consented to survey and photo
+        # 3: consented to photo, but not survey
+        # include as perceivers those who agreed to survey
+        if (consents[nodename] == 1) | (consents[nodename] == 2)
+
+            rad = vertexorbit(graph, v, dₘₐₓ);
             bins = samplingbins(rad, dₘₐₓ, consents);
         
             # only one call per seed number (i.e., one seed per villager)
-            verticeslists[get_prop(graph, v, :name)] = samplebins(
+            verticeslists[nodename] = samplebins(
                 MersenneTwister(seed),
                 bins;
                 desired = desired, dvals = dvals, moreinfo = moreinfo
@@ -243,7 +259,7 @@ function _samplenet!(
                 # length of the list of pairs
                 # drop [1] index since we don't keep
                 # (pairs, degree, realness) -> only pairs
-                ln = length(verticeslists[get_prop(graph, v, :name)]);
+                ln = length(verticeslists[nodename]);
                 if ln > 1 # if there is more than one valid pair
                     # shuffle the pairs for random presentation
                     idx = sample(
@@ -253,7 +269,13 @@ function _samplenet!(
                     # iterate over the info types (pairs, degree, realness)
                     # we don't store all of these for branch "Server"
                     # so don't iterate
-                    permute!(verticeslists[get_prop(graph, v, :name)], idx)
+                    if !moreinfo
+                        permute!(verticeslists[nodename], idx)
+                    else
+                        for k in 1:3
+                            permute!(verticeslists[nodename][k], idx)
+                        end
+                    end
                 end
             end
         end

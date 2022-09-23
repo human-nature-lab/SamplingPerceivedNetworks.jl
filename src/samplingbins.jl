@@ -67,11 +67,15 @@ end
 
 Check whether a node in the pair has not consented. If so, signal 'false'.
 
-2 is defined as consented to survey and photo. All other values do not have
-consent to use of photo (and are not usable).
+0: not consented to either
+1: consented to survey
+2: consented to survey and photo
+3: consented to photo, but not survey
+
+include edges where both p1 and p2 are either 2 and 3.
 """
 function consented(p1, p2, consents)
-    return if (consents[p1] != 2) | (consents[p2] != 2)
+    return if (consents[p1] < 2) | (consents[p2] < 2)
         false
     else
         true
