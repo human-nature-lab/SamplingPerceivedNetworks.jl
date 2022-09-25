@@ -34,7 +34,7 @@ function _samplebins!(coglist, bins, desired, dvals, moreinfo)
 
         # setup: get the relevant object from which to sample
 
-        realset = mk_binset(bins, d, boolean)
+        realset = mk_binset(bins, d, true)
 
         # execution: perform sampling, adjusting for ws and ts
 
@@ -71,7 +71,7 @@ function _samplebins!(coglist, bins, desired, dvals, moreinfo)
 
         # setup: get the relevant object from which to sample
 
-        fakset = mk_binset(bins, d, boolean)
+        fakeset = mk_binset(bins, d, false)
 
         # execution: perform sampling, adjusting for ws and ts
 
