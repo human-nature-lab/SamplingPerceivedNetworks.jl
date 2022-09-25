@@ -148,7 +148,7 @@ function _samplebins!(rng, coglist, bins, desired, dvals, moreinfo)
 
         # setup: get the relevant object from which to sample
 
-        fakeset = mk_binset(bins, d, true)
+        fakeset = mk_binset(bins, d, false)
 
         # execution: perform sampling, adjusting for ws and ts
 
