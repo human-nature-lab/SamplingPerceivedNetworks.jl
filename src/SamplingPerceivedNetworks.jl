@@ -11,6 +11,7 @@ module SamplingPerceivedNetworks
     # include("context.jl")
     include("samplingbins.jl")
     include("samplebins.jl")
+    include("_samplebins!.jl")
     include("samplenetwork.jl")
     include("utilities.jl")
 
