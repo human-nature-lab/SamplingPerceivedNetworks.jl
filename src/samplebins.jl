@@ -1,27 +1,5 @@
 # samplebins.jl
 
-function samplebins(
-    bins;
-    desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
-    moreinfo = false
-)
-
-    if moreinfo
-        degrees = Vector{Union{Int, UnitRange{Int}}}()
-        realness = Vector{Bool}()
-    end
-
-    coglist = Vector{Tuple{String, String}}()
-    
-    _samplebins!(rng, coglist, bins, desired, dvals, moreinfo)
-
-    if moreinfo
-        return coglist, degrees, realness
-    else
-        return coglist
-    end
-end
-
 """
         samplebins(
             [rng],
@@ -45,7 +23,7 @@ Compensation procedure:
 
 Arguments
 ≡≡≡≡≡≡≡≡≡≡≡
-- [rng]
+- [rng] : random number generator, e.g., `MersenneTwister(2)`
 - bins: full sampling bins from which to sample
 - desired
 - dvals
@@ -68,6 +46,28 @@ function samplebins(
     coglist = Vector{Tuple{String, String}}()
     
     _samplebins!(rng, coglist, bins, desired, dvals, moreinfo)
+
+    if moreinfo
+        return coglist, degrees, realness
+    else
+        return coglist
+    end
+end
+
+function samplebins(
+    bins;
+    desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
+    moreinfo = false
+)
+
+    if moreinfo
+        degrees = Vector{Union{Int, UnitRange{Int}}}()
+        realness = Vector{Bool}()
+    end
+
+    coglist = Vector{Tuple{String, String}}()
+    
+    _samplebins!(coglist, bins, desired, dvals, moreinfo)
 
     if moreinfo
         return coglist, degrees, realness

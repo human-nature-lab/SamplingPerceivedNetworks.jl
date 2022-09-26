@@ -1,6 +1,10 @@
 # _samplebins!.jl
 
+"""
+        mk_binset(bins, d::UnitRange{Int}, boolean)
 
+Extract the set from which to sample for a bin defined by a degree range, e.g., 1:2.
+"""
 function mk_binset(bins, d::UnitRange{Int}, boolean)
     # if it is a range, take the union of the degree bins over the range
     set = reduce(vcat, [bins[x, boolean] for x in d]);
@@ -8,11 +12,21 @@ function mk_binset(bins, d::UnitRange{Int}, boolean)
     return set
 end
 
+"""
+        mk_binset(bins, d::Int, boolean)
+
+Extract the set from which to sample for a bin defined by a single degree, e.g., 2.
+"""
 function mk_binset(bins, d::Int, boolean)
     # if a single degree, just take the bin
     return bins[d, boolean]
 end
 
+"""
+        _samplebins!(coglist, bins, desired, dvals, moreinfo)
+
+See samplebins.
+"""
 function _samplebins!(coglist, bins, desired, dvals, moreinfo)
 
     #=
