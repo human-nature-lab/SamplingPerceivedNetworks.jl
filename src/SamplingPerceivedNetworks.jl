@@ -10,6 +10,7 @@ module SamplingPerceivedNetworks
     # include("plotting.jl")
     # include("context.jl")
     include("samplingbins.jl")
+    include("_samplenet!.jl")
     include("samplebins.jl")
     include("_samplebins!.jl")
     include("samplenetwork.jl")
@@ -20,5 +21,6 @@ module SamplingPerceivedNetworks
         # context_graph,
         # plot_orbit_d, plot_context,
         samplingbins, samplebins, samplenetwork,
-        sort_edgelist!, psn_edgelist, psn_edgelists, edgelist
+        sort_edgelist!, psn_edgelist, psn_edgelists, edgelist,
+        countdesired
 end

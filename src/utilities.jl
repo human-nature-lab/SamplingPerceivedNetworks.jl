@@ -58,3 +58,11 @@ function edgelist(graph; df_out = true)
     end
     return el
 end
+
+function countdesired(desired)
+    nrel = 0
+    for des in desired
+        nrel += sum(des)
+    end
+    return nrel
+end
