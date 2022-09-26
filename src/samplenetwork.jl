@@ -46,7 +46,12 @@ function samplenetwork(
 
     verticeslists = verticeslist(moreinfo)
 
-    # alternative to vertices lists
+    #= 
+    alternative to vertices lists
+    this alternative requires rewriting samplebins
+    which currently outputs in the Dict{String, Vector{Tuple}} format
+    note that we need to sample all at once, since it is w/o replacement
+    =#
     # edgetab = init_edgetable(nv(graph) * countdesired(desired), moreinfo);
     
     # create a seed number for each perceiver
