@@ -41,7 +41,7 @@ N.B. that sample is not called on the same list twice, so it is fine to specify 
 When a bin, given as (reality, degree), is smaller than the desired number, other bins are oversampled so that 40 (or the maximum possible number) is reached for that survey.
 
 Compensation procedure:
-- try to get as many as possible from the real bin, then try to fill that gap with oversampling for the fake bin for that same degree. If there is a gap, roll that over and try to oversample real ties at the next degree.
+- try to get as many as possible from the real bin, then try to fill that gap with oversampling for the real bin for the next degree. If there is a gap after d_max, roll the gap over and oversample fake ties.
 
 Arguments
 ≡≡≡≡≡≡≡≡≡≡≡
