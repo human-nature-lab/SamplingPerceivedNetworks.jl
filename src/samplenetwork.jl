@@ -1,5 +1,12 @@
-# whole_network.jl
+# samplenetwork.jl
 # sampling lists for the whole network
+
+#=
+types for list storage
+two cases:
+1. a single degree bin
+2. a unit range over multiple degree distances\
+=#
 
 VerticesList1 = Dict{String, Vector{Tuple{String, String}}};
 VerticesList2 = Dict{String, Tuple{Vector{Tuple{String, String}}, Vector{Union{Int, UnitRange}}, Vector{Bool}}};
@@ -16,7 +23,8 @@ end
         samplenetwork(
             [rng],
             graph;
-            desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
+            desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
+            dvals = (1, 2, 3, 4),
             moreinfo = false,
             shuffle = true
         )
@@ -37,8 +45,8 @@ Optionally specify a random number generator (rng).
 function samplenetwork(
     rng,
     graph;
-    desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
-    moreinfo = false,
+    desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
+    dvals = (1, 2, 3, 4),
     shuffle = true
 )    
 
@@ -105,7 +113,8 @@ end
             [rng],
             graph,
             consents;
-            desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
+            desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
+            dvals = (1, 2, 3, 4),
             moreinfo = false,
             shuffle = true
         )
@@ -128,7 +137,8 @@ function samplenetwork(
     rng,
     graph,
     consents;
-    desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
+    desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
+    dvals = (1, 2, 3, 4),
     moreinfo = false,
     shuffle = true
 )    
@@ -158,7 +168,8 @@ end
 
 function samplenetwork(
     graph;
-    desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
+    desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
+    dvals = (1, 2, 3, 4),
     moreinfo = false,
     shuffle = true
 )    
