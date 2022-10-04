@@ -21,6 +21,6 @@ module SamplingPerceivedNetworks
         # context_graph,
         # plot_orbit_d, plot_context,
         samplingbins, samplebins, samplenetwork,
-        sort_edgelist!, psn_edgelist, psn_edgelists, edgelist,
-        countdesired
+        sort_edgelist!, psn_edgelist, psn_edgelists, edgelist, countdesired,
+        tuplesort!
 end

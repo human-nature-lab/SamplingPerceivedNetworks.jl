@@ -66,3 +66,17 @@ function countdesired(desired)
     end
     return nrel
 end
+
+"""
+        tuplesort!(pls)
+
+Alphanumerically sort a vector of tuples.
+"""
+function tuplesort!(pls)
+    for (i, (e1, e2)) in enumerate(pls)
+        if e1 > e2
+            # if e1 is alphanumerically after e2, switch their values
+            pls[i] = (e2, e1)
+        end
+    end
+end
