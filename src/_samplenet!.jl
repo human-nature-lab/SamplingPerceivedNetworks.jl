@@ -36,6 +36,9 @@ function _samplenet!(
                 desired = desired, dvals = dvals, moreinfo = moreinfo
             )
 
+            # sort the edges alphanumericaly
+            tuplesort!(verticeslists[nodename])
+
             if shuffle
                 # length of the list of pairs
                 # drop [1] index since we don't keep
@@ -59,13 +62,19 @@ function _samplenet!(
                     end
                 end
             end
-        end
-    end
+        end # (consents[nodename]...
+    end # (v,seed)
 end
 
 function _samplenet!(
     seeds,
-    verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo, shuffle
+    verticeslists,
+    graph,
+    dₘₐₓ,
+    desired,
+    dvals,
+    moreinfo,
+    shuffle
 )
 
     for (v, seed) in zip(vertices(graph), seeds)
@@ -77,6 +86,9 @@ function _samplenet!(
             bins;
             desired = desired, dvals = dvals, moreinfo = moreinfo
         )
+
+        # sort the edges alphanumericaly
+        tuplesort!(verticeslists[nodename])
 
         if shuffle
             # length of the list of pairs
