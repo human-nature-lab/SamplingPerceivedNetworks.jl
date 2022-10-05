@@ -17,5 +17,5 @@ module SamplingPerceivedNetworks
         vertexorbit, vertexorbit_d,
         samplingbins, samplebins, samplenetwork,
         sort_edgelist!, psn_edgelist, psn_edgelists, edgelist, countdesired,
-        tuplesort!
+        tuplesort!, tupleize
 end
