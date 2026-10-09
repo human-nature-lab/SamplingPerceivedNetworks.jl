@@ -462,3 +462,101 @@ end
     @test splitwanted(7) == (4, 3) && splitwanted(40) == (20, 20)
     @test_throws ArgumentError samplevillage(MersenneTwister(1), mg, cons; isolates = ["nobody"])
 end
+
+@testset "outer bin" begin
+    mg = shortvillage(22)
+    dmax = 2
+    spec = (desired = ((3, 3), (3, 3)), dvals = (1, 2))
+    for v in (1, 26)
+        b = SPN._vertexbins(mg, v, dmax; outer = true)
+        dist = gdistances(mg, v)
+        far = [u for u in vertices(mg) if u != v && dist[u] > dmax]
+        near = [u for u in vertices(mg) if u != v && dist[u] <= dmax]
+        nm(u) = get_prop(mg, u, :name)
+        brute = Dict(r => Set{Tuple{String,String}}() for r in (true, false))
+        for u in far, w in vcat(near, far)
+            (w in far && w <= u) && continue
+            push!(brute[has_edge(mg, u, w)], pair(nm(u), nm(w)))
+        end
+        @test Set(pair.(first.(b[0, true]), last.(b[0, true]))) == brute[true]
+        @test Set(pair.(first.(b[0, false]), last.(b[0, false]))) == brute[false]
+        # without outer the bins are unchanged
+        @test SPN._vertexbins(mg, v, dmax) == Dict(k => x for (k, x) in b if k[1] != 0)
+    end
+
+    lists = samplenetwork(MersenneTwister(5), mg; spec..., outer = (2, 2), moreinfo = true)
+    for (k, (ps, deg, rl)) in lists
+        @test length(ps) <= 16 && allunique(ps)
+        # an outer pair has a member beyond dmax (or unreachable)
+        v = parse(Int, k[2:end]); dist = gdistances(mg, v)
+        for (p, d) in zip(ps, deg)
+            m = max(dist[parse(Int, p[1][2:end])], dist[parse(Int, p[2][2:end])])
+            @test d == 0 ? m > dmax : m == d
+        end
+    end
+    @test "outer" in psn_edgelists(lists).bin
+    # off by default: the same stream as before
+    @test samplenetwork(MersenneTwister(5), mg; spec...) ==
+          samplenetwork(MersenneTwister(5), mg; spec..., outer = nothing)
+    # with the outer bin, every eligible pair has pi > 0
+    ip = inclusionprobs(mg; spec..., outer = (2, 2))
+    n = nv(mg)
+    @test all(nrow(ip[ip.perceiver .== "p$v", :]) == binomial(n - 1, 2) for v in (1, 9, 31))
+    @test all(ip.pi .> 0)
+    @test_throws ArgumentError samplenetwork(mg; spec..., outer = (1,))
+    @test_throws ArgumentError samplebins(SPN._vertexbins(mg, 1, 2); spec..., outer = (1, 1))
+end
+
+@testset "inclusionprobs with fill, isolates and the outer bin (Monte Carlo)" begin
+    # empirical inclusion frequency over R draws of samplevillage = pi
+    function mccheck(mg, consents, kw; isolates = String[], R = 20_000, tol = 0.02)
+        ip = inclusionprobs(mg, consents; kw..., isolates, randomfill = true)
+        hits = Dict((r.perceiver, r.from, r.to) => 0 for r in eachrow(ip))
+        rng = MersenneTwister(77)
+        for _ in 1:R
+            for (k, ps) in samplevillage(rng, mg, consents; kw..., isolates, randomfill = true)
+                for (a, b) in ps
+                    hits[k, min(a, b), max(a, b)] += 1    # KeyError if pi = 0
+                end
+            end
+        end
+        z = [abs(hits[r.perceiver, r.from, r.to] / R - r.pi) for r in eachrow(ip)]
+        @test maximum(z) < tol
+        # expected list lengths
+        for k in unique(ip.perceiver)
+            @test sum(ip.pi[ip.perceiver .== k]) ≈
+                  sum(hits[x] for x in keys(hits) if x[1] == k) / R atol = 0.05
+        end
+        return ip
+    end
+
+    mg = shortvillage(23)
+    nms = [get_prop(mg, i, :name) for i in vertices(mg)]
+    cons = Dict(nm => (i % 6 == 0 ? 1 : i % 13 == 0 ? 3 : 2) for (i, nm) in enumerate(nms))
+    cons["iso1"] = 2; cons["iso2"] = 3
+    small = (desired = ((3, 3), (3, 3)), dvals = (1, 2))   # short lists, small pools
+
+    # the fill alone, both perceiver rules
+    for excl in (false, true)
+        ip = mccheck(mg, cons, (; small..., excludeperceiver = excl))
+        @test any(ip.bin .== "none")                          # pairs reachable only by the fill
+        @test excl == !any(r.perceiver in (r.from, r.to) for r in eachrow(ip))
+    end
+    # the deployed design, with isolates (one in the graph) and consents
+    ip = mccheck(mg, cons, (; deployed_design...); isolates = ["iso1", "iso2", "p5"])
+    @test all(ip.bin[ip.perceiver .== "iso1"] .== "none")
+    # the outer bin (it absorbs shortfalls, so the fill rarely runs), no consents
+    mccheck(mg, nothing, (; small..., outer = (1, 1)))
+    # carryover off with the fill
+    mccheck(mg, cons, (; small..., carryover = false))
+
+    # the per-vertex form agrees with the stacked form
+    kw = (; deployed_design..., randomfill = true)
+    one = inclusionprobs(mg, 27, cons; kw...)
+    all_ = inclusionprobs(mg, cons; kw...)
+    sub = all_[all_.perceiver .== "p27", Not(:perceiver)]
+    @test nrow(sub) > 0 && any(sub.bin .== "none")
+    @test sort(sub, [:from, :to]) == sort(one, [:from, :to])
+    # randomfill = false is the stratified stage, unchanged
+    @test inclusionprobs(mg, cons) == inclusionprobs(mg, cons; randomfill = false, isolates = String[])
+end
