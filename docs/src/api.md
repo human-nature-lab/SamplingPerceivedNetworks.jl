@@ -11,6 +11,7 @@ samplingbins
 ```@docs
 samplebins
 samplenetwork
+samplevillage
 deployed_design
 merged_design
 inclusionprobs

@@ -6,7 +6,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SamplingPerceivedNetworks = "d0a4d0c9-8b3f-492c-85dc-357c09e2ebfe"
 
 [sources]
-SamplingPerceivedNetworks = {path = "/Users/emf/.julia/dev/SamplingPerceivedNetworks"}
+SamplingPerceivedNetworks = {path = ".."}
 
 [compat]
 Documenter = "1"

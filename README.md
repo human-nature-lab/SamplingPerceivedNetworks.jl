@@ -30,25 +30,25 @@ Pkg.add(url="https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl")
 
 ```julia
 using SamplingPerceivedNetworks
-using Graphs, MetaGraphs
+using Graphs, MetaGraphs, Random
 
 # Create or load a network (a MetaGraph with a :name property on each vertex)
 graph = # your MetaGraph
 
-# Index vertices by name
-set_indexing_prop!(graph, :name)
+# Stratified lists for every perceiver, with the deployed design
+# (5 real + 5 counterfactual pairs at each of distances 1 to 4)
+lists = samplenetwork(MersenneTwister(1), graph; deployed_design...)
 
-# Sampling specification: for each distance bin, (# real, # counterfactual)
-desired = [(5, 5), (10, 10), (10, 10)]  # for d=1, d=2, d=3
+# The full deployed procedure: consents, fill to 40, isolates
+# (consents: Dict from name to code 0-3; isolates: names of people with no ties)
+lists = samplevillage(MersenneTwister(1), graph, consents; isolates = isolates)
 
-# Sample for entire network
-# (dₘₐₓ is the largest value in dvals)
-sampling_lists = samplenetwork(graph; desired=desired, dvals=1:3)
+# Exact inclusion probabilities of those lists (weights are 1 / pi)
+pis = inclusionprobs(graph, consents; randomfill = true, isolates = isolates)
 
 # Convert to an edgelist DataFrame for export
 using DataFrames, CSV
-edgelist_df = psn_edgelists(sampling_lists)
-CSV.write("sampling_lists.csv", edgelist_df)
+CSV.write("sampling_lists.csv", psn_edgelists(lists))
 ```
 
 Documentation: <https://human-nature-lab.github.io/SamplingPerceivedNetworks.jl> (build locally with `julia --project=docs docs/make.jl`).
@@ -70,12 +70,17 @@ See `example.jl` for a complete working example using a Watts-Strogatz small-wor
 
 `carryover = true` (the default) makes up a short bin's shortfall from other bins so that lists keep their full length; `carryover = false` draws at most each bin's own desired number, as described in the paper.
 
+`outer = (r, f)` (off by default) adds an outer bin of all remaining eligible pairs (beyond the last distance bin, or unreachable), so that no eligible pair has inclusion probability zero.
+
+### The Deployed Procedure
+- `samplevillage([rng,] graph[, consents]; isolates, excludeperceiver, ...)` - The per-village procedure of the Honduras deployment (ported from its server code, HonCog.jl): the stratified stage, then lists shorter than the target (40) are filled with `ceil(gap/2)` real and `floor(gap/2)` counterfactual pairs drawn uniformly from the whole village, and each isolate (a respondent who named no one, not in `graph`) gets 20 + 20 uniform pairs. By default fill pairs may include the perceiver, as in the deployed code; `excludeperceiver = true` removes them. See the documentation for the deployed details it reproduces
+
 ### Design Presets and Inclusion Probabilities
 - `deployed_design`, `merged_design` - `desired` and `dvals` presets, splatted in with `samplenetwork(graph; deployed_design...)`. `deployed_design` (4 separate degree bins of 5 real + 5 counterfactual) is the Honduras CSS design and the default; `merged_design` (degrees 1-2 combined at 10 + 10, then 5 + 5 at degrees 3 and 4) was never deployed
-- `inclusionprobs(graph[, v][, consents]; desired, dvals, carryover)` - Exact probability `pi` that each pair is on a perceiver's list (`1/pi` is the estimation weight), computed from the graph with no random sampling, including the gap carry-over and consent filtering. Returns a DataFrame (`perceiver`, `from`, `to`, `bin`, `real`, `pi`; no `perceiver` column when `v` is given). It gives the probability that a pair is on the list, not that it was answered (respondents who do not recognize someone in a pair are not asked about it)
+- `inclusionprobs(graph[, v][, consents]; desired, dvals, carryover, outer, randomfill, excludeperceiver, isolates)` - Exact probability `pi` that each pair is on a perceiver's list (`1/pi` is the estimation weight), computed from the graph with no random sampling, including the gap carry-over, consent filtering, the outer bin and, with `randomfill = true`, the fill and isolates of `samplevillage`. Returns a DataFrame (`perceiver`, `from`, `to`, `bin`, `real`, `pi`; no `perceiver` column when `v` is given). It gives the probability that a pair is on the list, not that it was answered (respondents who do not recognize someone in a pair are not asked about it)
 
 ### Utilities
-- `psn_edgelists(vertlists)` - Convert sampling output to DataFrame edgelist (columns `perceiver`, `from`, `to`, and with `moreinfo = true`, `bin` and `real`)
+- `psn_edgelists(vertlists)` - Convert sampling output to DataFrame edgelist (columns `perceiver`, `from`, `to`, and with `moreinfo = true`, `bin` and `real`; `bin` is `"outer"` or `"fill"` for pairs from the outer bin or the fill)
 - `edgelist(graph)` - Extract sociocentric edgelist from graph
 - `tupleize(alters1, alters2; sort = false)` - Create tuples from edgelist columns, alphanumerically sorted within each pair if `sort` is true
 
@@ -85,7 +90,7 @@ See `example.jl` for a complete working example using a Watts-Strogatz small-wor
 using Pkg; Pkg.activate("."); Pkg.test()
 ```
 
-The tests check that `inclusionprobs` agrees with empirical inclusion frequencies over many draws (with carry-over active and with consents). They also check the orbit and sampling bins against a brute-force computation from shortest-path distances on random graphs, the stratified draw (including how a short bin passes its shortfall to later bins), consent filtering, and the edgelist outputs.
+The tests check that `inclusionprobs` agrees with empirical inclusion frequencies over many draws (with carry-over active, with consents, and for `samplevillage` with the fill, isolates and the outer bin). They also check the orbit and sampling bins against a brute-force computation from shortest-path distances on random graphs, the stratified draw (including how a short bin passes its shortfall to later bins), consent filtering, and the edgelist outputs.
 
 ## Dependencies
 
@@ -101,13 +106,15 @@ Built on [JuliaGraphs](https://juliagraphs.org):
 - Distance-based stratified sampling of network ties
 - Separate sampling of real and counterfactual relationships
 - Consent filtering for photo permissions
+- The deployed fill-to-40 and isolate lists, and an optional outer bin
+- Exact inclusion probabilities for design-based weighting
 - Reproducible sampling through per-perceiver RNG seeds
 - Edgelist export
 - Bins of single distances or ranges of distances
 
 ## Citation
 
-If you use this package in your research, please cite:
+To cite the software, use the metadata in `CITATION.cff` (GitHub's "Cite this repository"); archived releases have a Zenodo DOI. For the method, please cite:
 
 ```bibtex
 @article{feltham_cognitive_2025,

@@ -31,4 +31,6 @@ Pkg.add(url = "https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl"
    [`samplenetwork`](@ref) does so for every perceiver in the network.
 
 [`samplenetwork`](@ref) runs all three steps. Call the others to inspect or
-customize a step.
+customize a step. [`samplevillage`](@ref) adds the fill to the target length
+and the lists for isolates, reproducing the deployed procedure, and
+[`inclusionprobs`](@ref) returns each pair's exact inclusion probability.

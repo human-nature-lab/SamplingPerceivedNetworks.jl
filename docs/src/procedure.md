@@ -65,3 +65,63 @@ Given an `rng`, `samplenetwork` draws one seed per perceiver. A single seeded
 stream drives both that perceiver's sampling and shuffling, so their list
 depends only on the seed and the orbit. Without an `rng`, the global generator
 is used.
+
+## Outer bin
+
+The orbit stops at ``d_{max}``, so a pair with a member farther away, or
+unreachable, has inclusion probability zero in the deployed design. With
+`outer = (r, f)`, an extra bin holds all of these remaining eligible pairs
+and supplies `r` real and `f` counterfactual pairs. Every eligible pair then
+has a positive inclusion probability. The outer bin is the last bin in the
+carry-over order, so a real shortfall in the degree bins is made up from it
+before the counterfactual bins. It is off by default (`outer = nothing`, as
+deployed):
+
+```julia
+samplenetwork(graph; deployed_design..., outer = (4, 4))
+```
+
+With `moreinfo = true` its pairs have degree label `0` (`"outer"` in
+[`psn_edgelists`](@ref)).
+
+## The deployed procedure: fill and isolates
+
+[`samplevillage`](@ref) runs the whole per-village procedure of the Honduras
+deployment (the `HonCog.jl` server code) in one call:
+
+```julia
+lists = samplevillage(MersenneTwister(seed), graph, consents; isolates = isolates)
+```
+
+1. The stratified stage, as in [`samplenetwork`](@ref).
+2. **Fill.** A list shorter than the target (40 for `deployed_design`) gets
+   `ceil(gap/2)` real and `floor(gap/2)` counterfactual pairs, drawn uniformly
+   without replacement from the whole village: every real tie, or every
+   non-adjacent pair, among the vertices of `graph` whose members both have
+   consent code ≥ 2, minus the pairs already on the list. The fill pairs carry
+   no distance stratum. They are shuffled and appended after the stratified
+   pairs, so they are shown last.
+3. **Isolates.** Respondents who named no one are not in the edgelist, and
+   so not in `graph`; pass their names as `isolates`. Each one with consent
+   code 2 or 3 gets `ceil(target/2)` real and `floor(target/2)`
+   counterfactual pairs drawn uniformly from the village pools.
+
+Build `graph` from the edgelist alone, as the deployment did. With
+`moreinfo = true` the fill and isolate pairs have degree label `-1`
+(`"fill"` in [`psn_edgelists`](@ref)).
+
+The port reproduces the deployment code, including two rules that look
+unintended:
+
+- Fill pairs may include the perceiver (`excludeperceiver = false`, the
+  default). This is the HonCog version of 2022-10-25. A later commit
+  (2022-12-12) meant to exclude such pairs but passes its arguments in the
+  wrong order, so it fails on any short list and cannot have produced lists.
+  `excludeperceiver = true` gives the intended rule.
+- Perceivers need consent code 1 or 2, but isolates need 2 or 3, so an
+  isolate with code 3 (photo only) gets a list.
+
+The deployment drew the fill and isolate pairs from Julia's global random
+generator, so they cannot be regenerated from the village seed.
+`samplevillage` draws them from the `rng` it is given, after the stratified
+stage.
