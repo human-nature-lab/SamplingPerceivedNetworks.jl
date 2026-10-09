@@ -43,6 +43,7 @@ function _samplenet!(
         # if consent[node_name] == 0 then skip, since
         # the person will not be surveyed for css
         nodename = get_prop(graph, v, :name)
+        key = string(nodename)  # output is keyed by String names
 
         # consent states:         
         # 0: not consented to either
@@ -52,18 +53,18 @@ function _samplenet!(
         # include as perceivers those who agreed to survey
         if (consents[nodename] == 1) | (consents[nodename] == 2)
 
-            rad = vertexorbit(graph, v, dₘₐₓ);
-            bins = samplingbins(rad, dₘₐₓ, consents);
+            bins = _vertexbins(graph, v, dₘₐₓ, consents)
         
-            # only one call per seed number (i.e., one seed per villager)
-            verticeslists[nodename] = samplebins(
-                MersenneTwister(seed),
+            # one rng per villager, used for both sampling and shuffling
+            rng = MersenneTwister(seed)
+            verticeslists[key] = samplebins(
+                rng,
                 bins;
                 desired = desired, dvals = dvals, moreinfo = moreinfo
             )
 
             _finishlist!(
-                verticeslists[nodename], moreinfo, shuffle, MersenneTwister(seed)
+                verticeslists[key], moreinfo, shuffle, rng
             )
         end # (consents[nodename]...
     end # (v,seed)
@@ -82,18 +83,19 @@ function _samplenet!(
 
     for (v, seed) in zip(vertices(graph), seeds)
         nodename = get_prop(graph, v, :name)
-        rad = vertexorbit(graph, v, dₘₐₓ);
-        bins = samplingbins(rad, dₘₐₓ);
+        key = string(nodename)  # output is keyed by String names
+        bins = _vertexbins(graph, v, dₘₐₓ)
 
-        # only one call per seed number (i.e., one seed per villager)
-        verticeslists[nodename] = samplebins(
-            MersenneTwister(seed),
+        # one rng per villager, used for both sampling and shuffling
+        rng = MersenneTwister(seed)
+        verticeslists[key] = samplebins(
+            rng,
             bins;
             desired = desired, dvals = dvals, moreinfo = moreinfo
         )
 
         _finishlist!(
-            verticeslists[nodename], moreinfo, shuffle, MersenneTwister(seed)
+            verticeslists[key], moreinfo, shuffle, rng
         )
     end
 end

@@ -197,3 +197,84 @@ end
     @test nrow(el) == ne(mg) && all(el.from .<= el.to)
     @test tupleize(["b", "a"], ["a", "b"]; sort = true) == [("a", "b"), ("a", "b")]
 end
+
+@testset "_vertexbins reproduces samplingbins(vertexorbit) exactly" begin
+    rng = MersenneTwister(11)
+    graphs = (watts_strogatz(40, 4, 0.3; rng = rng), erdos_renyi(35, 0.05; rng = rng),
+              barabasi_albert(30, 2; rng = rng))
+    for g in graphs
+        mg = named_graph(g)
+        cons = Dict("p$i" => rand(rng, 0:3) for i in 1:nv(mg))
+        for dmax in (1, 3, 5), v in vertices(mg)
+            @test SPN._vertexbins(mg, v, dmax) == samplingbins(vertexorbit(mg, v, dmax), dmax)
+            @test SPN._vertexbins(mg, v, dmax, cons) ==
+                samplingbins(vertexorbit(mg, v, dmax), dmax, cons)
+        end
+    end
+end
+
+@testset "vertexorbit edge cases" begin
+    # isolated vertex and a second component
+    mg = named_graph(SimpleGraph(Edge.([(1,2),(2,3),(4,5)])))
+    add_vertex!(mg); set_prop!(mg, 6, :name, "p6")
+    @test ne(vertexorbit(mg, 6, 3)) == 0
+    @test nv(vertexorbit(mg, 1, 10)) == 2          # dmax beyond the diameter; other component excluded
+    @test SPN._vertexbins(mg, 6, 3) == samplingbins(vertexorbit(mg, 6, 3), 3)
+    # index = false (requires name indexing)
+    set_indexing_prop!(mg, :name)
+    @test nv(vertexorbit(mg, "p1", 2; index = false)) == nv(vertexorbit(mg, 1, 2))
+    # vertexorbit_d keeps only ties at d
+    rad = vertexorbit(named_graph(watts_strogatz(20, 4, 0.3; rng = MersenneTwister(2))), 1, 3)
+    for d in 1:3
+        radd = SPN.vertexorbit_d(rad, d)
+        @test all(get_prop(radd, e, :d) == d for e in edges(radd))
+    end
+end
+
+@testset "argument validation" begin
+    mg = named_graph(watts_strogatz(20, 4, 0.3; rng = MersenneTwister(3)))
+    @test_throws ArgumentError samplenetwork(mg; desired = ((3, 3), (2, 2)), dvals = (1:2,))
+    @test_throws ArgumentError samplenetwork(mg; desired = ((3, 3),), dvals = (3:2,))
+    @test_throws ArgumentError samplebins(Dict{Tuple{Int,Bool},Vector{Tuple{String,String}}}();
+        desired = ((1, 1), (1, 1)), dvals = (1,))
+    bins = samplingbins(vertexorbit(mg, 1, 2), 2)
+    @test_throws ArgumentError samplebins(bins; desired = ((1, 1),), dvals = (3,))
+    @test_throws ArgumentError samplingbins(vertexorbit(mg, 1, 3), 2)
+    @test_throws ArgumentError samplingbins(vertexorbit(mg, 1, 2), 2, Dict("p2" => 2))
+    # StepRange dvals work
+    @test length(samplebins(bins; desired = ((2, 2),), dvals = (1:1:2,))) == 4
+end
+
+@testset "samplenetwork without rng, with consents" begin
+    mg = named_graph(watts_strogatz(30, 4, 0.3; rng = MersenneTwister(4)))
+    cons = Dict("p$i" => 2 for i in 1:30)
+    r = samplenetwork(mg, cons; desired = ((3, 3), (3, 3)), dvals = (1, 2))
+    @test length(r) == 30 && all(0 < length(l) <= 12 for l in values(r))
+    Random.seed!(1); a = samplenetwork(mg; desired = ((3, 3), (3, 3)), dvals = (1, 2))
+    Random.seed!(1); b = samplenetwork(mg; desired = ((3, 3), (3, 3)), dvals = (1, 2))
+    @test a == b
+end
+
+@testset "utilities and name handling" begin
+    @test countdesired(((10, 10), (5, 5), (5, 5))) == 40
+    v = [("b", "a"), ("a", "b"), ("c", "d")]
+    tuplesort!(v)
+    @test v == [("a", "b"), ("a", "b"), ("c", "d")]
+    df = DataFrame(x = ["b", "a"], y = ["a", "b"])
+    sort_edgelist!(df, :x, :y)
+    @test df.x == ["a", "a"] && df.y == ["b", "b"]
+    @test edgelist(named_graph(path_graph(3)); df_out = false) isa Matrix
+
+    # integer node names are converted to Strings
+    mg = MetaGraph(watts_strogatz(20, 4, 0.3; rng = MersenneTwister(9)))
+    for i in 1:nv(mg); set_prop!(mg, i, :name, i); end
+    r = samplenetwork(MersenneTwister(1), mg; desired = ((2, 2), (2, 2)), dvals = (1, 2))
+    @test all(k isa String for k in keys(r))
+    cons = Dict(i => 2 for i in 1:20)
+    @test length(samplenetwork(MersenneTwister(1), mg, cons; desired = ((2, 2),), dvals = (1,))) == 20
+
+    # missing consent values are an ArgumentError
+    mgs = named_graph(watts_strogatz(20, 4, 0.3; rng = MersenneTwister(9)))
+    cm = Dict{String,Union{Int,Missing}}("p$i" => 2 for i in 1:20); cm["p3"] = missing
+    @test_throws ArgumentError samplenetwork(MersenneTwister(1), mgs, cm)
+end

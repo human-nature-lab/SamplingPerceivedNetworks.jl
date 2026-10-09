@@ -9,7 +9,7 @@ two cases:
 =#
 
 const VerticesList1 = Dict{String, Vector{Tuple{String, String}}};
-const VerticesList2 = Dict{String, Tuple{Vector{Tuple{String, String}}, Vector{Union{Int, UnitRange}}, Vector{Bool}}};
+const VerticesList2 = Dict{String, Tuple{Vector{Tuple{String, String}}, Vector{Union{Int, UnitRange{Int}}}, Vector{Bool}}};
 
 function verticeslist(moreinfo)
     return if !moreinfo
@@ -43,7 +43,7 @@ The format is (# real, # counterfactual)).
 Optionally specify a random number generator (rng).
 """
 function samplenetwork(
-    rng,
+    rng::AbstractRNG,
     graph;
     desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
     dvals = (1, 2, 3, 4),
@@ -51,7 +51,8 @@ function samplenetwork(
     shuffle = true
 )    
 
-    dₘₐₓ = maximum(reduce(vcat, dvals))
+    _checkspec(desired, dvals)
+    dₘₐₓ = maximum(maximum, dvals)
 
     verticeslists = verticeslist(moreinfo)
 
@@ -76,27 +77,6 @@ function samplenetwork(
     )
     
     return verticeslists
-end
-
-function _samplenet!(
-    verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo, shuffle
-)
-    for v in vertices(graph)
-        nodename = get_prop(graph, v, :name)
-        rad = vertexorbit(graph, v, dₘₐₓ);
-        bins = samplingbins(rad, dₘₐₓ);
-
-        verticeslists[nodename] = samplebins(
-            bins;
-            desired = desired,
-            dvals = dvals,
-            moreinfo = moreinfo
-        )
-
-        _finishlist!(
-            verticeslists[nodename], moreinfo, shuffle, Random.default_rng()
-        )
-    end
 end
 
 # consent versions
@@ -125,9 +105,15 @@ degree bin specified by `dvals`, at that index.
 The format is (# real, # counterfactual)).
 
 Optionally specify a random number generator (rng).
+
+Consent codes in `consents` (a `Dict` from node name to code): 0 = none,
+1 = survey only, 2 = survey and photo, 3 = photo only. Only perceivers with
+code 1 or 2 receive a list (others are absent from the result); a pair is
+included only if both nodes have code ≥ 2, so a perceiver may get a short or
+empty list. Every node must have an entry (`ArgumentError` otherwise).
 """
 function samplenetwork(
-    rng,
+    rng::AbstractRNG,
     graph,
     consents;
     desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
@@ -136,7 +122,8 @@ function samplenetwork(
     shuffle = true
 )    
 
-    dₘₐₓ = maximum(reduce(vcat, dvals))
+    _checkspec(desired, dvals)
+    dₘₐₓ = maximum(maximum, dvals)
 
     # every node must have a consent status
     missingnames = [
@@ -146,6 +133,13 @@ function samplenetwork(
     isempty(missingnames) || throw(ArgumentError(
         "consents has no entry for $(length(missingnames)) node(s), " *
         "e.g., $(first(missingnames))"
+    ))
+
+    # ... and it cannot be `missing`
+    missingvals = [nm for nm in keys(consents) if ismissing(consents[nm])]
+    isempty(missingvals) || throw(ArgumentError(
+        "consents has missing values for $(length(missingvals)) node(s), " *
+        "e.g., $(first(missingvals))"
     ))
 
     verticeslists = verticeslist(moreinfo)
@@ -175,14 +169,23 @@ function samplenetwork(
     dvals = (1, 2, 3, 4),
     moreinfo = false,
     shuffle = true
-)    
+)
+    return samplenetwork(
+        Random.default_rng(), graph;
+        desired = desired, dvals = dvals, moreinfo = moreinfo, shuffle = shuffle
+    )
+end
 
-    dₘₐₓ = maximum(reduce(vcat, dvals))
-
-    verticeslists = verticeslist(moreinfo)
-    
-    sizehint!(verticeslists, nv(graph))
-    _samplenet!(verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo, shuffle)
-    
-    return verticeslists
+function samplenetwork(
+    graph,
+    consents::AbstractDict;
+    desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
+    dvals = (1, 2, 3, 4),
+    moreinfo = false,
+    shuffle = true
+)
+    return samplenetwork(
+        Random.default_rng(), graph, consents;
+        desired = desired, dvals = dvals, moreinfo = moreinfo, shuffle = shuffle
+    )
 end

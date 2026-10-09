@@ -31,7 +31,7 @@ for i in 1:nv(graph)
     set_prop!(graph, i, :name, "Person_$i")
 end
 
-# Set up name indexing (required for the package)
+# Set up name indexing (needed only to look up vertices by name)
 set_indexing_prop!(graph, :name)
 
 #=

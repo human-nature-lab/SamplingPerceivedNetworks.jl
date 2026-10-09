@@ -16,7 +16,7 @@ If `rng` is specified, use the same rng value for each call to sample. This will
 be the perceiver's rng value assigned earlier in the procedure.
 N.B. that sample is not called on the same list twice, so it is fine to specify one number in the argument to sample.
 
-When a bin, given as (reality, degree), is smaller than the desired number, other bins are oversampled so that 40 (or the maximum possible number) is reached for that survey.
+When a bin, given as (degree, reality), is smaller than the desired number, other bins are oversampled so that the total desired number (or the maximum possible number) is reached for that survey.
 
 Compensation procedure:
 - try to get as many as possible from the real bin, then try to fill that gap with oversampling for the real bin for the next degree. If there is a gap after d_max, roll the gap over and oversample fake ties.
@@ -25,9 +25,9 @@ Arguments
 ≡≡≡≡≡≡≡≡≡≡≡
 - [rng] : random number generator, e.g., `MersenneTwister(2)`
 - bins: full sampling bins from which to sample
-- desired
-- dvals
-- moreinfo
+- desired: tuple of (# real, # counterfactual) for each degree bin in `dvals`
+- dvals: degree bins, in increasing order; each is an integer or a range of integers (combining degrees into one bin). Must be the same length as `desired`
+- moreinfo: if true, also return the degree bin and the reality of each pair
 """
 function samplebins(
     rng,
@@ -35,6 +35,8 @@ function samplebins(
     desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
     moreinfo = false
 )
+
+    _checkspec(desired, dvals)
 
     # if moreinfo, initialize objects for storage
     degrees = Vector{Union{Int, UnitRange{Int}}}()
@@ -57,17 +59,8 @@ function samplebins(
     desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
     moreinfo = false
 )
-
-    degrees = Vector{Union{Int, UnitRange{Int}}}()
-    realness = Vector{Bool}()
-
-    coglist = Vector{Tuple{String, String}}()
-    
-    _samplebins!(coglist, degrees, realness, bins, desired, dvals, moreinfo)
-
-    if moreinfo
-        return coglist, degrees, realness
-    else
-        return coglist
-    end
+    return samplebins(
+        Random.default_rng(), bins;
+        desired = desired, dvals = dvals, moreinfo = moreinfo
+    )
 end

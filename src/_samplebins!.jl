@@ -1,109 +1,56 @@
 # _samplebins!.jl
 
 """
-        mk_binset(bins, d::UnitRange{Int}, boolean)
+        mk_binset(bins, d::AbstractRange{<:Integer}, boolean)
 
 Extract the set from which to sample for a bin defined by a degree range, e.g., 1:2.
 """
-function mk_binset(bins, d::UnitRange{Int}, boolean)
+function mk_binset(bins, d::AbstractRange{<:Integer}, boolean)
     # if it is a range, take the union of the degree bins over the range
-    set = reduce(vcat, [bins[x, boolean] for x in d]);
-
-    return set
+    return reduce(vcat, [_getbin(bins, x, boolean) for x in d])
 end
 
 """
-        mk_binset(bins, d::Int, boolean)
+        mk_binset(bins, d::Integer, boolean)
 
 Extract the set from which to sample for a bin defined by a single degree, e.g., 2.
 """
-function mk_binset(bins, d::Int, boolean)
+function mk_binset(bins, d::Integer, boolean)
     # if a single degree, just take the bin
+    return _getbin(bins, d, boolean)
+end
+
+function _getbin(bins, d, boolean)
+    haskey(bins, (d, boolean)) || throw(ArgumentError(
+        "bins has no entry for degree $d (real = $boolean); " *
+        "were the bins built with a smaller dₘₐₓ than `dvals` requires?"
+    ))
     return bins[d, boolean]
 end
 
+# `desired` and `dvals` must pair up, and each element of `dvals` must be a
+# nonempty integer or integer range
+function _checkspec(desired, dvals)
+    length(desired) == length(dvals) || throw(ArgumentError(
+        "desired has $(length(desired)) elements but dvals has " *
+        "$(length(dvals)); they must match"
+    ))
+    isempty(dvals) && throw(ArgumentError("dvals must not be empty"))
+    for d in dvals
+        d isa Integer || (d isa AbstractRange{<:Integer} && !isempty(d)) ||
+            throw(ArgumentError(
+                "each element of dvals must be an integer or a nonempty " *
+                "integer range; got $d"
+            ))
+    end
+    return nothing
+end
+
 """
-        _samplebins!(coglist, degrees, realness, bins, desired, dvals, moreinfo)
+        _samplebins!(rng, coglist, degrees, realness, bins, desired, dvals, moreinfo)
 
 See samplebins.
 """
-function _samplebins!(coglist, degrees, realness, bins, desired, dvals, moreinfo)
-
-    #=
-    tie sample counting
-    - used to account for smaller-than-desired bins and consequent
-      oversampling of other bins to fill the gap.
-    
-    ws: total wanted up to that point
-    ts: number actually sampled up to that point
-    (ws - ts) gives the sampling gap
-    =#
-
-    ws = 0; # tracks the number wanted (over the iterations)
-    ts = 0; # tracks the number actually sampled (over the iterations)
-
-    # real ties
-    for (sz, d) in zip(desired, dvals)
-        rw = sz[1] # real wanted
-
-        # setup: get the relevant object from which to sample
-
-        realset = mk_binset(bins, d, true)
-
-        # execution: perform sampling, adjusting for ws and ts
-
-        gap = ws - ts # num. units still wanted (try to pick these up)
-
-        rnum = min(length(realset), rw + gap) # this is the number that will actually be sampled at this step
-        append!(coglist, sample(realset, rnum; replace = false))
-        
-        if moreinfo
-            append!(degrees, fill(d, rnum))
-            append!(realness, fill(true, rnum))
-        end
-        
-        # total wanted up to this point (wholly determined by dvals)
-        ws += rw
-
-        #=
-        add number actually sampled
-        including possibly extra for gap -> rnum will include the portion of the gap that has been filled 
-        We simply want to add the number sampled, to know whether we have closed the gap, and need to continue
-        to overample)
-        =#
-        ts += rnum
-    end
-
-    #=
-    the gap (if any left over across all of the true ties) carries over to
-    the fake tie sampling.
-    =#
-
-    # fake ties
-    for (sz, d) in zip(desired, dvals)
-        fw = sz[2] # fake wanted
-
-        # setup: get the relevant object from which to sample
-
-        fakeset = mk_binset(bins, d, false)
-
-        # execution: perform sampling, adjusting for ws and ts
-
-        gap = ws - ts # num. units still wanted (try to pick these up)
-        
-        fnum = min(length(fakeset), fw + gap)
-        append!(coglist, sample(fakeset, fnum; replace = false))
-
-        if moreinfo
-            append!(degrees, fill(d, fnum))
-            append!(realness, fill(false, fnum))
-        end
-
-        ws += fw # total wanted up to this point
-        ts += fnum # add number actually sampled
-    end
-end
-
 function _samplebins!(rng, coglist, degrees, realness, bins, desired, dvals, moreinfo)
 
     #=

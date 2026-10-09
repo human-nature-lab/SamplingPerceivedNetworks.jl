@@ -1,8 +1,18 @@
 
+"""
+        sort_edgelist!(df, c1, c2)
+
+Within each row of the `DataFrame` `df`, order the values in columns `c1` and
+`c2` alphanumerically (so that an undirected tie always reads the same way).
+"""
 function sort_edgelist!(ru, c1, c2)
-    for (i, r) in enumerate(eachrow(ru))
-        ru[i, [c1, c2]] = sort([r[c1], r[c2]])
+    a, b = ru[!, c1], ru[!, c2]
+    for i in eachindex(a, b)
+        if a[i] > b[i]
+            a[i], b[i] = b[i], a[i]
+        end
     end
+    return ru
 end
 
 """
@@ -42,6 +52,14 @@ function psn_edgelists(vertlists; df_out = true)
     return df_out ? el : Matrix(el)
 end
 
+"""
+        edgelist(graph; df_out = true)
+
+Extract the sociocentric edgelist of `graph` (a MetaGraph with `:name`
+vertex properties) as node names. Return a `DataFrame` with columns `from` and
+`to`, each row sorted alphanumerically; if `df_out` is false, return the raw
+`Matrix` of names in the graph's edge order (rows are not sorted).
+"""
 function edgelist(graph; df_out = true)
     el = fill("", length(edges(graph)), 2);
     for (i, e) in enumerate(edges(graph))
@@ -56,6 +74,12 @@ function edgelist(graph; df_out = true)
     return el
 end
 
+"""
+        countdesired(desired)
+
+Total number of relationships in a `desired` specification, i.e., the sum of
+all (# real, # counterfactual) entries: the target list length per perceiver.
+"""
 function countdesired(desired)
     nrel = 0
     for des in desired
@@ -79,19 +103,15 @@ function tuplesort!(pls)
 end
 
 """
-        tupleize(alters1, alters2; sort = true)
+        tupleize(alters1, alters2; sort = false)
 
-Create a vector of tuples from the columns of an edgelist. If asymmetric, sort should be false.
+Create a vector of tuples from the columns of an edgelist. If `sort` is true, each tuple is ordered alphanumerically (for symmetric ties); leave it false if the ties are asymmetric.
 """
 function tupleize(alters1, alters2; sort = false)
     tups = Vector{Tuple{String, String}}(undef, length(alters1))
     for (i, (e1, e2)) in enumerate(zip(alters1, alters2))
         tups[i] = if sort
-            tups[i] = if e1 > e2
-                (e2, e1)
-            else
-                (e1, e2)
-            end
+            e1 > e2 ? (e2, e1) : (e1, e2)
         else
             (e1, e2)
         end
