@@ -114,7 +114,8 @@ The port reproduces the deployment code, including two rules that look
 unintended:
 
 - Fill pairs may include the perceiver (`excludeperceiver = false`, the
-  default). This is the HonCog version of 2022-10-25. A later commit
+  default). This is the HonCog version of 2022-10-25, and the delivered data
+  contain such pairs. A later commit
   (2022-12-12) meant to exclude such pairs but passes its arguments in the
   wrong order, so it fails on any short list and cannot have produced lists.
   `excludeperceiver = true` gives the intended rule.

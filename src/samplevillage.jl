@@ -48,10 +48,11 @@ draws cannot be regenerated from the village seed.)
 
 Deployed behavior reproduced, and the options that change it:
 - `excludeperceiver = false` (default): the fill pool may contain pairs that
-  involve the perceiver, as in HonCog of 2022-10-25 (commit `6213868`), the
-  version that ran. HonCog's last commit (2022-12-12, `ecbab7f`) tried to
-  remove them but passes its arguments in the wrong order and throws a
-  `MethodError` whenever a list is short, so it cannot have produced lists.
+  involve the perceiver, as in HonCog of 2022-10-25 (commit `6213868`). The
+  delivered Honduras data contain such pairs, consistent with this version.
+  HonCog's last commit (2022-12-12, `ecbab7f`) tried to remove them but
+  passes its arguments in the wrong order and throws a `MethodError` whenever
+  a list is short, so it cannot have produced lists.
   `excludeperceiver = true` gives the intended rule.
 - consent: perceivers need code 1 or 2 (as in `samplenetwork`), isolates
   code > 1, so an isolate with code 3 (photo only) gets a list.
