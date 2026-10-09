@@ -44,13 +44,20 @@ samplenetwork(graph; desired = ((5,5), (5,5), (5,5), (5,5)), dvals = (1, 2, 3, 4
 
 Some bins cannot supply the requested number. A perceiver with two direct
 connections has fewer than five real ties among their first-degree neighbors,
-for example. Without compensation the list would then fall short of 40. Real bins are processed in
-order of distance, and each tops up the shortfall left by earlier bins. A real
-shortfall remaining after the last distance is added to the counterfactual
-draws, which are processed in the same way. The list reaches the requested
-total whenever enough candidate pairs exist. The paper notes that short bins can leave a
-list under 40 but does not describe a carry-over rule; the rule is specific to
-this package.
+for example. The paper's procedure draws what each bin has, so such a
+perceiver receives fewer than 40 pairs. Set `carryover = false` to reproduce
+this.
+
+By default (`carryover = true`) the package makes up the shortfall. Real bins
+are processed in order of distance, and each tops up what earlier bins could
+not supply. A real shortfall remaining after the last distance is added to the
+counterfactual draws, which are processed in the same way. The list then
+reaches the requested total whenever enough candidate pairs exist. The paper
+does not describe this rule; it is specific to this package.
+
+```julia
+samplenetwork(graph; deployed_design..., carryover = false)
+```
 
 ### Reproducibility
 

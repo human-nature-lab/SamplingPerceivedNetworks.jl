@@ -46,8 +46,8 @@ function _checkconsents(graph, consents)
 end
 
 """
-        inclusionprobs(graph, v[, consents]; desired, dvals)
-        inclusionprobs(graph[, consents]; desired, dvals)
+        inclusionprobs(graph, v[, consents]; desired, dvals, carryover)
+        inclusionprobs(graph[, consents]; desired, dvals, carryover)
 
 Exact first-order inclusion probabilities of the stratified draw in
 `samplenetwork`, computed from the graph without any random sampling.
@@ -64,16 +64,18 @@ who has no list, the second form has no rows.
 
 Within a bin the draw is a simple random sample without replacement, so
 `pi = n / N`: `N` is the size of the bin and `n` the number drawn, after the
-gap carry-over (see `samplebins`). The weight for estimation is `1 / pi`.
+gap carry-over (see `samplebins`; `carryover = false` turns it off). The weight for estimation is `1 / pi`.
 
-Covers the stratified stage only. A top-up of short lists to the full length
-(as in the survey software), or the addition of isolates, is not modeled.
+`pi` is the probability that a pair is on the list `samplenetwork` produces,
+not that it was answered: respondents who do not recognize someone in a pair
+are not asked about it, and this is not modeled.
 `consents` follows `samplenetwork`: a pair is eligible only if both nodes have
 code ≥ 2.
 """
 function inclusionprobs(
     graph, v::Integer, consents = nothing;
-    desired = deployed_design.desired, dvals = deployed_design.dvals
+    desired = deployed_design.desired, dvals = deployed_design.dvals,
+    carryover = true
 )
     _checkspec(desired, dvals)
     dₘₐₓ = maximum(maximum, dvals)
@@ -82,7 +84,7 @@ function inclusionprobs(
     bins = _vertexbins(graph, v, dₘₐₓ, consents)
     realsets = [mk_binset(bins, d, true) for d in dvals]
     fakesets = [mk_binset(bins, d, false) for d in dvals]
-    nr, nf = _quotas(length.(realsets), length.(fakesets), desired)
+    nr, nf = _quotas(length.(realsets), length.(fakesets), desired; carryover = carryover)
 
     from = String[]; to = String[]; bin = String[]
     real = Bool[]; pr = Float64[]
@@ -100,7 +102,8 @@ end
 
 function inclusionprobs(
     graph, consents = nothing;
-    desired = deployed_design.desired, dvals = deployed_design.dvals
+    desired = deployed_design.desired, dvals = deployed_design.dvals,
+    carryover = true
 )
     _checkspec(desired, dvals)
     consents === nothing || _checkconsents(graph, consents)
@@ -115,7 +118,8 @@ function inclusionprobs(
             continue  # no list for this perceiver
         end
         df = inclusionprobs(
-            graph, v, consents; desired = desired, dvals = dvals
+            graph, v, consents;
+            desired = desired, dvals = dvals, carryover = carryover
         )
         insertcols!(df, 1, :perceiver => fill(string(nm), nrow(df)))
         append!(out, df)

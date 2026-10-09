@@ -47,17 +47,19 @@ function _checkspec(desired, dvals)
 end
 
 """
-        _quotas(realsizes, fakesizes, desired)
+        _quotas(realsizes, fakesizes, desired; carryover = true)
 
 Number to draw from each real and each counterfactual bin, given the bin
 sizes: `(nreal, nfake)`, vectors with one entry per element of `desired`.
 Depends only on the sizes, so it is shared by the sampler and by
 `inclusionprobs`.
 
-A bin smaller than desired passes its shortfall to the later bins. A shortfall
-left over after the last real bin carries into the counterfactual bins.
+With `carryover`, a bin smaller than desired passes its shortfall to the later
+bins, and a shortfall left over after the last real bin carries into the
+counterfactual bins. Without it, each bin supplies at most its own desired
+number, so a short bin gives a short list.
 """
-function _quotas(realsizes, fakesizes, desired)
+function _quotas(realsizes, fakesizes, desired; carryover = true)
     ws = 0 # number wanted (over the iterations)
     ts = 0 # number actually drawn (over the iterations)
     nr = zeros(Int, length(desired))
@@ -66,14 +68,14 @@ function _quotas(realsizes, fakesizes, desired)
     # real ties
     for (i, sz) in enumerate(desired)
         # (ws - ts) is the gap: units still wanted from earlier bins
-        nr[i] = min(realsizes[i], sz[1] + (ws - ts))
+        nr[i] = min(realsizes[i], sz[1] + (carryover ? ws - ts : 0))
         ws += sz[1]
         ts += nr[i]
     end
 
     # fake ties: any gap left over across the real ties carries over
     for (i, sz) in enumerate(desired)
-        nf[i] = min(fakesizes[i], sz[2] + (ws - ts))
+        nf[i] = min(fakesizes[i], sz[2] + (carryover ? ws - ts : 0))
         ws += sz[2]
         ts += nf[i]
     end
@@ -81,14 +83,16 @@ function _quotas(realsizes, fakesizes, desired)
 end
 
 """
-        _samplebins!(rng, coglist, degrees, realness, bins, desired, dvals, moreinfo)
+        _samplebins!(rng, coglist, degrees, realness, bins, desired, dvals, moreinfo, carryover)
 
 See samplebins.
 """
-function _samplebins!(rng, coglist, degrees, realness, bins, desired, dvals, moreinfo)
+function _samplebins!(
+    rng, coglist, degrees, realness, bins, desired, dvals, moreinfo, carryover
+)
     realsets = [mk_binset(bins, d, true) for d in dvals]
     fakesets = [mk_binset(bins, d, false) for d in dvals]
-    nr, nf = _quotas(length.(realsets), length.(fakesets), desired)
+    nr, nf = _quotas(length.(realsets), length.(fakesets), desired; carryover = carryover)
 
     # real ties first, then counterfactual (the order fixes the rng stream)
     for (sets, ns, rl) in ((realsets, nr, true), (fakesets, nf, false))

@@ -35,7 +35,8 @@ function _samplenet!(
     desired,
     dvals,
     moreinfo,
-    shuffle
+    shuffle,
+    carryover
 )
 
     for (v, seed) in zip(vertices(graph), seeds)
@@ -60,7 +61,8 @@ function _samplenet!(
             verticeslists[key] = samplebins(
                 rng,
                 bins;
-                desired = desired, dvals = dvals, moreinfo = moreinfo
+                desired = desired, dvals = dvals, moreinfo = moreinfo,
+                carryover = carryover
             )
 
             _finishlist!(
@@ -78,7 +80,8 @@ function _samplenet!(
     desired,
     dvals,
     moreinfo,
-    shuffle
+    shuffle,
+    carryover
 )
 
     for (v, seed) in zip(vertices(graph), seeds)
@@ -91,7 +94,8 @@ function _samplenet!(
         verticeslists[key] = samplebins(
             rng,
             bins;
-            desired = desired, dvals = dvals, moreinfo = moreinfo
+            desired = desired, dvals = dvals, moreinfo = moreinfo,
+                carryover = carryover
         )
 
         _finishlist!(

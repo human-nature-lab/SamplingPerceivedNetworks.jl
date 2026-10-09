@@ -26,7 +26,8 @@ end
             desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
             dvals = (1, 2, 3, 4),
             moreinfo = false,
-            shuffle = true
+            shuffle = true,
+            carryover = true
         )
 
 Generate, for each person in an unweighted, undirected sociocentric network,
@@ -38,6 +39,12 @@ numbers given by `desired`.
 into one bin). `desired` has one tuple `(# real, # counterfactual)` for each
 element of `dvals`, in the same order.
 
+By default a bin smaller than desired is made up from other bins (see
+`samplebins`), so lists keep their full length where possible. With
+`carryover = false` each bin supplies at most its own desired number, as in the
+procedure described in Feltham et al. (2025), and a short bin gives a shorter
+list.
+
 Optionally specify a random number generator (rng).
 """
 function samplenetwork(
@@ -46,7 +53,8 @@ function samplenetwork(
     desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
     dvals = (1, 2, 3, 4),
     moreinfo = false,
-    shuffle = true
+    shuffle = true,
+    carryover = true
 )    
 
     _checkspec(desired, dvals)
@@ -71,7 +79,7 @@ function samplenetwork(
 
     sizehint!(verticeslists, nv(graph))
     _samplenet!(
-        seeds, verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo, shuffle
+        seeds, verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo, shuffle, carryover
     )
     
     return verticeslists
@@ -87,7 +95,8 @@ end
             desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
             dvals = (1, 2, 3, 4),
             moreinfo = false,
-            shuffle = true
+            shuffle = true,
+            carryover = true
         )
 
 Generate, for each person in an unweighted, undirected sociocentric network,
@@ -98,6 +107,12 @@ numbers given by `desired`.
 `dvals` contains integers or integer ranges (a range combines several degrees
 into one bin). `desired` has one tuple `(# real, # counterfactual)` for each
 element of `dvals`, in the same order.
+
+By default a bin smaller than desired is made up from other bins (see
+`samplebins`), so lists keep their full length where possible. With
+`carryover = false` each bin supplies at most its own desired number, as in the
+procedure described in Feltham et al. (2025), and a short bin gives a shorter
+list.
 
 Optionally specify a random number generator (rng).
 
@@ -114,7 +129,8 @@ function samplenetwork(
     desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
     dvals = (1, 2, 3, 4),
     moreinfo = false,
-    shuffle = true
+    shuffle = true,
+    carryover = true
 )    
 
     _checkspec(desired, dvals)
@@ -137,7 +153,7 @@ function samplenetwork(
     sizehint!(verticeslists, nv(graph))
     _samplenet!(
         seeds, verticeslists, graph, consents,
-        dₘₐₓ, desired, dvals, moreinfo, shuffle
+        dₘₐₓ, desired, dvals, moreinfo, shuffle, carryover
     )
     
     return verticeslists
@@ -148,11 +164,13 @@ function samplenetwork(
     desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
     dvals = (1, 2, 3, 4),
     moreinfo = false,
-    shuffle = true
+    shuffle = true,
+    carryover = true
 )
     return samplenetwork(
         Random.default_rng(), graph;
-        desired = desired, dvals = dvals, moreinfo = moreinfo, shuffle = shuffle
+        desired = desired, dvals = dvals, moreinfo = moreinfo, shuffle = shuffle,
+        carryover = carryover
     )
 end
 
@@ -162,10 +180,12 @@ function samplenetwork(
     desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
     dvals = (1, 2, 3, 4),
     moreinfo = false,
-    shuffle = true
+    shuffle = true,
+    carryover = true
 )
     return samplenetwork(
         Random.default_rng(), graph, consents;
-        desired = desired, dvals = dvals, moreinfo = moreinfo, shuffle = shuffle
+        desired = desired, dvals = dvals, moreinfo = moreinfo, shuffle = shuffle,
+        carryover = carryover
     )
 end

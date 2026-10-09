@@ -65,12 +65,14 @@ See `example.jl` for a complete working example using a Watts-Strogatz small-wor
 - `samplingbins(orbit, dₘₐₓ)` - Create sampling bins indexed by (distance, reality) tuples
 
 ### Stratified Sampling
-- `samplebins([rng,] bins; desired, dvals, moreinfo)` - Sample relationships for one perceiver
-- `samplenetwork([rng,] graph[, consents]; desired, dvals, moreinfo, shuffle)` - Generate lists for entire network. With `consents` (a `Dict` from name to a code of 0 to 3, required for every node), only perceivers who consented to the survey (1 or 2) get a list, and a pair is shown only if both members consented to photos (2 or 3)
+- `samplebins([rng,] bins; desired, dvals, moreinfo, carryover)` - Sample relationships for one perceiver
+- `samplenetwork([rng,] graph[, consents]; desired, dvals, moreinfo, shuffle, carryover)` - Generate lists for entire network. With `consents` (a `Dict` from name to a code of 0 to 3, required for every node), only perceivers who consented to the survey (1 or 2) get a list, and a pair is shown only if both members consented to photos (2 or 3)
+
+`carryover = true` (the default) makes up a short bin's shortfall from other bins so that lists keep their full length; `carryover = false` draws at most each bin's own desired number, as described in the paper.
 
 ### Design Presets and Inclusion Probabilities
 - `deployed_design`, `merged_design` - `desired` and `dvals` presets, splatted in with `samplenetwork(graph; deployed_design...)`. `deployed_design` (4 separate degree bins of 5 real + 5 counterfactual) is the Honduras CSS design and the default; `merged_design` (degrees 1-2 combined at 10 + 10, then 5 + 5 at degrees 3 and 4) was never deployed
-- `inclusionprobs(graph[, v][, consents]; desired, dvals)` - Exact probability `pi` that each pair is on a perceiver's list (`1/pi` is the estimation weight), computed from the graph with no random sampling, including the gap carry-over and consent filtering. Returns a DataFrame (`perceiver`, `from`, `to`, `bin`, `real`, `pi`; no `perceiver` column when `v` is given). It covers the stratified stage only, not the top-up of short lists or isolates
+- `inclusionprobs(graph[, v][, consents]; desired, dvals, carryover)` - Exact probability `pi` that each pair is on a perceiver's list (`1/pi` is the estimation weight), computed from the graph with no random sampling, including the gap carry-over and consent filtering. Returns a DataFrame (`perceiver`, `from`, `to`, `bin`, `real`, `pi`; no `perceiver` column when `v` is given). It gives the probability that a pair is on the list, not that it was answered (respondents who do not recognize someone in a pair are not asked about it)
 
 ### Utilities
 - `psn_edgelists(vertlists)` - Convert sampling output to DataFrame edgelist (columns `perceiver`, `from`, `to`, and with `moreinfo = true`, `bin` and `real`)

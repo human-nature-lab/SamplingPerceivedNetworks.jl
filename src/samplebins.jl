@@ -5,7 +5,7 @@
             [rng],
             bins;
             desired = deployed_design.desired, dvals = deployed_design.dvals,
-            moreinfo = false
+            moreinfo = false, carryover = true
         )
 
 Sample from `bins` to generate the CSS list for one perceiver, as a vector of
@@ -17,7 +17,7 @@ own seeded generator.
 
 When a bin, given as (degree, reality), is smaller than the desired number, other bins are oversampled so that the total desired number (or the maximum possible number) is reached for that survey.
 
-Shortfalls are carried forward. A real bin that cannot supply the desired number is topped up from the real bin at the next degree. A real shortfall remaining after the last degree is made up from the counterfactual bins.
+With `carryover = true` (the default), shortfalls are carried forward. A real bin that cannot supply the desired number is topped up from the real bin at the next degree. A real shortfall remaining after the last degree is made up from the counterfactual bins.
 
 Arguments
 ≡≡≡≡≡≡≡≡≡≡≡
@@ -26,12 +26,13 @@ Arguments
 - desired: tuple of (# real, # counterfactual) for each degree bin in `dvals`
 - dvals: degree bins, in increasing order; each is an integer or a range of integers (combining degrees into one bin). Must be the same length as `desired`
 - moreinfo: if true, also return the degree bin and the reality of each pair
+- carryover: if false, a bin smaller than desired is not made up from other bins, so the list is shorter; this is the procedure as described in Feltham et al. (2025)
 """
 function samplebins(
     rng,
     bins;
     desired = deployed_design.desired, dvals = deployed_design.dvals,
-    moreinfo = false
+    moreinfo = false, carryover = true
 )
 
     _checkspec(desired, dvals)
@@ -43,7 +44,9 @@ function samplebins(
     # initialize object for list storage
     coglist = Vector{Tuple{String, String}}()
     
-    _samplebins!(rng, coglist, degrees, realness, bins, desired, dvals, moreinfo)
+    _samplebins!(
+        rng, coglist, degrees, realness, bins, desired, dvals, moreinfo, carryover
+    )
 
     if moreinfo
         return coglist, degrees, realness
@@ -55,10 +58,11 @@ end
 function samplebins(
     bins;
     desired = deployed_design.desired, dvals = deployed_design.dvals,
-    moreinfo = false
+    moreinfo = false, carryover = true
 )
     return samplebins(
         Random.default_rng(), bins;
-        desired = desired, dvals = dvals, moreinfo = moreinfo
+        desired = desired, dvals = dvals, moreinfo = moreinfo,
+        carryover = carryover
     )
 end

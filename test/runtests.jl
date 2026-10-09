@@ -370,3 +370,33 @@ end
     @test_throws ArgumentError inclusionprobs(sparse, Dict(names[1] => 2))
     @test_throws ArgumentError inclusionprobs(sparse, 1; desired = ((1, 1),), dvals = (1, 2))
 end
+
+@testset "carryover = false matches the paper (no compensation)" begin
+    pr(tag, n) = [("$(tag)a$i", "$(tag)b$i") for i in 1:n]
+    bins = Dict{Tuple{Int,Bool},Vector{Tuple{String,String}}}(
+        (1, true) => pr("1t", 2), (2, true) => pr("2t", 10), (3, true) => pr("3t", 10),
+        (1, false) => pr("1f", 10), (2, false) => pr("2f", 10), (3, false) => pr("3f", 10),
+    )
+    kw = (desired = ((5, 5), (5, 5), (5, 5)), dvals = (1, 2, 3), moreinfo = true)
+    cnt(r, d, rl) = count(i -> r[2][i] == d && r[3][i] == rl, eachindex(r[2]))
+
+    r = samplebins(MersenneTwister(1), bins; kw..., carryover = false)
+    @test [cnt(r, d, true) for d in 1:3] == [2, 5, 5]     # d = 1 stays short
+    @test [cnt(r, d, false) for d in 1:3] == [5, 5, 5]
+    @test length(r[1]) == 27
+
+    r = samplebins(MersenneTwister(1), bins; kw...)       # default: carries over
+    @test [cnt(r, d, true) for d in 1:3] == [2, 8, 5]
+    @test length(r[1]) == 30
+
+    # inclusion probabilities follow the same rule
+    mg = named_graph(watts_strogatz(40, 4, 0.3; rng = MersenneTwister(12)))
+    spec = (desired = ((5, 5), (5, 5), (5, 5)), dvals = (1, 2, 3))
+    for v in (1, 7)
+        lists = samplenetwork(MersenneTwister(2), mg; spec..., carryover = false)
+        nm = "p$v"
+        ip = inclusionprobs(mg, v; spec..., carryover = false)
+        @test sum(ip.pi) ≈ length(lists[nm])
+        @test sum(inclusionprobs(mg, v; spec...).pi) ≥ sum(ip.pi)
+    end
+end
