@@ -18,12 +18,14 @@ end
 """
         psn_edgelists(vertlists; df_out = true)
 
-Flatten the output of `samplenetwork` (a dictionary from perceiver name to
-that perceiver's list) into one edgelist with a row per (perceiver, pair).
-Columns: `perceiver`, `from`, `to`; if the lists were generated with
-`moreinfo = true`, also `bin` (the degree bin, e.g., "1:2" or "3") and `real`
-(whether the pair is a real tie). Each pair is sorted alphanumerically.
-Return a `DataFrame`, or a `Matrix` if `df_out` is false.
+Flatten the output of `samplenetwork` or `samplevillage` (a dictionary from
+perceiver name to that perceiver's list) into one edgelist with a row per
+(perceiver, pair). Columns: `perceiver`, `from`, `to`; if the lists were
+generated with `moreinfo = true`, also `bin` (the degree bin, e.g., "1:2" or
+"3"; `"outer"` for the outer bin; `"fill"` for a pair drawn village-wide by
+the fill or for an isolate) and `real` (whether the pair is a real tie). Each
+pair is sorted alphanumerically. Return a `DataFrame`, or a `Matrix` if
+`df_out` is false.
 """
 function psn_edgelists(vertlists; df_out = true)
     moreinfo = !isempty(vertlists) && first(values(vertlists)) isa Tuple
@@ -39,7 +41,7 @@ function psn_edgelists(vertlists; df_out = true)
             push!(to, max(a, b))
         end
         if moreinfo
-            append!(bin, string.(v[2]))
+            append!(bin, _binlabel.(v[2]))
             append!(real, v[3])
         end
     end

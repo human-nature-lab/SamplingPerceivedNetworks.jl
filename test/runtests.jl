@@ -1,5 +1,6 @@
 using Test, Random, Graphs, MetaGraphs, DataFrames
 using SamplingPerceivedNetworks
+using SamplingPerceivedNetworks: splitwanted
 const SPN = SamplingPerceivedNetworks
 
 function named_graph(g)
@@ -399,4 +400,65 @@ end
         @test sum(ip.pi) ≈ length(lists[nm])
         @test sum(inclusionprobs(mg, v; spec...).pi) ≥ sum(ip.pi)
     end
+end
+
+# a village with short lists: a small world plus small components
+function shortvillage(seed)
+    g = watts_strogatz(24, 4, 0.2; rng = MersenneTwister(seed))
+    for (a, b) in ((25, 26), (26, 27), (25, 27), (28, 29), (29, 30), (31, 32))
+        while nv(g) < b; add_vertex!(g); end
+        add_edge!(g, a, b)
+    end
+    return named_graph(g)
+end
+
+@testset "samplevillage: fill to the target and isolates" begin
+    mg = shortvillage(21)
+    nms = [get_prop(mg, i, :name) for i in vertices(mg)]
+    cons = Dict(nm => (i % 7 == 0 ? 1 : i % 11 == 0 ? 0 : 2) for (i, nm) in enumerate(nms))
+    cons["iso1"] = 2; cons["iso2"] = 3; cons["iso3"] = 1     # isolates, not in the graph
+    isolates = ["iso1", "iso2", "iso3"]
+    ok(nm) = cons[nm] >= 2
+    reals, fakes = SPN._fillpools(mg, cons)
+    @test all(ok(a) && ok(b) && a < b for (a, b) in vcat(reals, fakes))
+    @test Set(reals) == Set(pair(get_prop(mg, src(e), :name), get_prop(mg, dst(e), :name))
+                            for e in edges(mg) if ok("p$(src(e))") && ok("p$(dst(e))"))
+    @test length(reals) + length(fakes) == binomial(count(ok, nms), 2)
+
+    strat = samplenetwork(MersenneTwister(3), mg, cons; moreinfo = true)
+    @test count(v -> length(v[1]) < 40, values(strat)) >= 5   # the fill is active
+    for excl in (false, true)
+        lists = samplevillage(MersenneTwister(3), mg, cons; isolates, excludeperceiver = excl,
+                              moreinfo = true)
+        # isolates with code > 1 get a list (code 3 too); code 1 does not
+        @test Set(keys(lists)) == union(Set(keys(strat)), Set(["iso1", "iso2"]))
+        for (k, (ps, deg, rl)) in lists
+            @test allunique(ps) && length(ps) == 40           # the pools are large enough
+            @test all(ok(a) && ok(b) for (a, b) in ps)
+            @test rl == [pair(a, b) in Set(reals) for (a, b) in ps]
+            k in ("iso1", "iso2") && (@test all(==(-1), deg); @test count(rl) == 20; continue)
+            # stratified pairs first, unchanged; then the fill
+            s = strat[k]; L = length(s[1]); g = 40 - L
+            @test ps[1:L] == s[1] && deg[1:L] == s[2]
+            @test all(==(-1), deg[L+1:end])
+            @test count(rl[L+1:end]) == cld(g, 2)              # ceil(gap/2) real
+            excl && @test !any(k in p for p in ps)
+        end
+        # with excludeperceiver = false, some fill pairs involve the perceiver
+        if !excl
+            @test any(any(k in p for p in v[1]) for (k, v) in lists if !startswith(k, "iso"))
+        end
+    end
+
+    # without the fill and isolates it is samplenetwork
+    @test samplevillage(MersenneTwister(3), mg, cons; randomfill = false) ==
+          samplenetwork(MersenneTwister(3), mg, cons)
+    # an isolate in the graph has their list replaced; reproducible with an rng
+    a = samplevillage(MersenneTwister(4), mg; isolates = ["p1"], moreinfo = true)
+    @test all(==(-1), a["p1"][2]) && length(a["p1"][1]) == 40
+    @test a == samplevillage(MersenneTwister(4), mg; isolates = ["p1"], moreinfo = true)
+    # psn_edgelists labels the fill
+    @test "fill" in psn_edgelists(a).bin
+    @test splitwanted(7) == (4, 3) && splitwanted(40) == (20, 20)
+    @test_throws ArgumentError samplevillage(MersenneTwister(1), mg, cons; isolates = ["nobody"])
 end

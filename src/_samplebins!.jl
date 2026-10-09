@@ -29,8 +29,9 @@ function _getbin(bins, d, boolean)
 end
 
 # `desired` and `dvals` must pair up, and each element of `dvals` must be a
-# nonempty integer or integer range
-function _checkspec(desired, dvals)
+# nonempty integer or integer range of degrees >= 1; `outer`, if given, is one
+# (# real, # counterfactual) tuple
+function _checkspec(desired, dvals, outer = nothing)
     length(desired) == length(dvals) || throw(ArgumentError(
         "desired has $(length(desired)) elements but dvals has " *
         "$(length(dvals)); they must match"
@@ -42,8 +43,57 @@ function _checkspec(desired, dvals)
                 "each element of dvals must be an integer or a nonempty " *
                 "integer range; got $d"
             ))
+        minimum(d) >= 1 || throw(ArgumentError(
+            "degrees in dvals must be at least 1; got $d"
+        ))
     end
+    outer === nothing ||
+        (length(outer) == 2 && all(x -> x isa Integer && x >= 0, outer)) ||
+        throw(ArgumentError(
+            "outer must be nothing or a tuple (# real, # counterfactual) " *
+            "of nonnegative integers; got $outer"
+        ))
     return nothing
+end
+
+#=
+Bin labels. A degree bin is labelled by its element of `dvals`. Two labels
+mark pairs from outside the degree bins:
+- OUTERBIN (0): the outer bin, every eligible pair beyond the last degree bin
+  (a member farther than dₘₐₓ from the perceiver, or unreachable);
+- FILLBIN (-1): drawn village-wide, by the fill to the target length or for
+  an isolate (see `samplevillage`).
+=#
+const OUTERBIN = 0
+const FILLBIN = -1
+
+_binlabel(d) = d == OUTERBIN ? "outer" : d == FILLBIN ? "fill" : string(d)
+
+"""
+        _cells(bins, desired, dvals, outer)
+
+The sampling cells in draw order, `(realsets, fakesets, desired, labels)`:
+one entry per element of `dvals`, plus a last entry for the outer bin when
+`outer` is a tuple. Shared by the sampler and `inclusionprobs`.
+"""
+function _cells(bins, desired, dvals, outer)
+    realsets = [mk_binset(bins, d, true) for d in dvals]
+    fakesets = [mk_binset(bins, d, false) for d in dvals]
+    labels = Any[d for d in dvals]
+    desired = collect(desired)
+    if outer !== nothing
+        haskey(bins, (OUTERBIN, true)) && haskey(bins, (OUTERBIN, false)) ||
+            throw(ArgumentError(
+                "bins have no outer bin (keys ($OUTERBIN, true) and " *
+                "($OUTERBIN, false)); `samplenetwork` builds it when " *
+                "`outer` is given"
+            ))
+        push!(realsets, bins[OUTERBIN, true])
+        push!(fakesets, bins[OUTERBIN, false])
+        push!(desired, Tuple(outer))
+        push!(labels, OUTERBIN)
+    end
+    return realsets, fakesets, desired, labels
 end
 
 """
@@ -83,20 +133,21 @@ function _quotas(realsizes, fakesizes, desired; carryover = true)
 end
 
 """
-        _samplebins!(rng, coglist, degrees, realness, bins, desired, dvals, moreinfo, carryover)
+        _samplebins!(rng, coglist, degrees, realness, bins, desired, dvals, moreinfo, carryover, outer)
 
 See samplebins.
 """
 function _samplebins!(
-    rng, coglist, degrees, realness, bins, desired, dvals, moreinfo, carryover
+    rng, coglist, degrees, realness, bins, desired, dvals, moreinfo, carryover,
+    outer = nothing
 )
-    realsets = [mk_binset(bins, d, true) for d in dvals]
-    fakesets = [mk_binset(bins, d, false) for d in dvals]
+    # the outer bin, if any, is the last cell: it takes part in the carry-over
+    realsets, fakesets, desired, labels = _cells(bins, desired, dvals, outer)
     nr, nf = _quotas(length.(realsets), length.(fakesets), desired; carryover = carryover)
 
     # real ties first, then counterfactual (the order fixes the rng stream)
     for (sets, ns, rl) in ((realsets, nr, true), (fakesets, nf, false))
-        for (set, n, d) in zip(sets, ns, dvals)
+        for (set, n, d) in zip(sets, ns, labels)
             append!(coglist, sample(rng, set, n; replace = false))
             if moreinfo
                 append!(degrees, fill(d, n))

@@ -36,7 +36,8 @@ function _samplenet!(
     dvals,
     moreinfo,
     shuffle,
-    carryover
+    carryover,
+    outer
 )
 
     for (v, seed) in zip(vertices(graph), seeds)
@@ -54,7 +55,9 @@ function _samplenet!(
         # include as perceivers those who agreed to survey
         if (consents[nodename] == 1) | (consents[nodename] == 2)
 
-            bins = _vertexbins(graph, v, dₘₐₓ, consents)
+            bins = _vertexbins(
+                graph, v, dₘₐₓ, consents; outer = outer !== nothing
+            )
         
             # one rng per villager, used for both sampling and shuffling
             rng = MersenneTwister(seed)
@@ -62,7 +65,7 @@ function _samplenet!(
                 rng,
                 bins;
                 desired = desired, dvals = dvals, moreinfo = moreinfo,
-                carryover = carryover
+                carryover = carryover, outer = outer
             )
 
             _finishlist!(
@@ -81,13 +84,14 @@ function _samplenet!(
     dvals,
     moreinfo,
     shuffle,
-    carryover
+    carryover,
+    outer
 )
 
     for (v, seed) in zip(vertices(graph), seeds)
         nodename = get_prop(graph, v, :name)
         key = string(nodename)  # output is keyed by String names
-        bins = _vertexbins(graph, v, dₘₐₓ)
+        bins = _vertexbins(graph, v, dₘₐₓ; outer = outer !== nothing)
 
         # one rng per villager, used for both sampling and shuffling
         rng = MersenneTwister(seed)
@@ -95,7 +99,7 @@ function _samplenet!(
             rng,
             bins;
             desired = desired, dvals = dvals, moreinfo = moreinfo,
-                carryover = carryover
+            carryover = carryover, outer = outer
         )
 
         _finishlist!(

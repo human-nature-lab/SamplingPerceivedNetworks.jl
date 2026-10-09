@@ -100,8 +100,13 @@ d = max(dist(v, a), dist(v, b)), and is real iff a and b are tied in `graph`.
 The ordering reproduces vertexorbit: the vertices of the dₘₐₓ-egonet in
 neighborhood order, with the perceiver's slot taken by the last vertex
 (as `rem_vertex!` does), and pairs in lexicographic order of position.
+
+With `outer = true`, also build the outer bin under the keys (OUTERBIN, real):
+every eligible pair of non-perceiver nodes with at least one member beyond
+dₘₐₓ (or unreachable). Its pairs follow the orbit-far pairs, then the
+far-far pairs, in vertex order.
 =#
-function _vertexbins(graph, v, dₘₐₓ, consents = nothing)
+function _vertexbins(graph, v, dₘₐₓ, consents = nothing; outer = false)
     population = setuplists(dₘₐₓ)
 
     nd = Graphs.neighborhood_dists(graph, v, dₘₐₓ)
@@ -126,6 +131,33 @@ function _vertexbins(graph, v, dₘₐₓ, consents = nothing)
             rl = has_edge(graph, verts[i], verts[j])
             push!(population[max(dists[i], dists[j]), rl], (names[i], names[j]))
         end
+    end
+
+    outer && _outerbin!(population, graph, v, verts, names, ok, consents)
+    return population
+end
+
+function _outerbin!(population, graph, v, verts, names, ok, consents)
+    inorbit = falses(nv(graph)); inorbit[v] = true; inorbit[verts] .= true
+    far = [u for u in vertices(graph) if !inorbit[u]]
+    rawfar = [get_prop(graph, u, :name) for u in far]
+    farnames = string.(rawfar)
+    farok = consents === nothing ? fill(true, length(far)) :
+        [_consent_ok(nm, consents) for nm in rawfar]
+
+    population[OUTERBIN, true] = Tuple{String, String}[]
+    population[OUTERBIN, false] = Tuple{String, String}[]
+    # orbit member with a far node
+    for i in eachindex(verts), j in eachindex(far)
+        ok[i] && farok[j] || continue
+        rl = has_edge(graph, verts[i], far[j])
+        push!(population[OUTERBIN, rl], (names[i], farnames[j]))
+    end
+    # two far nodes
+    for i in eachindex(far), j in i+1:length(far)
+        farok[i] && farok[j] || continue
+        rl = has_edge(graph, far[i], far[j])
+        push!(population[OUTERBIN, rl], (farnames[i], farnames[j]))
     end
     return population
 end
