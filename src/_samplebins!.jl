@@ -23,11 +23,11 @@ function mk_binset(bins, d::Int, boolean)
 end
 
 """
-        _samplebins!(coglist, bins, desired, dvals, moreinfo)
+        _samplebins!(coglist, degrees, realness, bins, desired, dvals, moreinfo)
 
 See samplebins.
 """
-function _samplebins!(coglist, bins, desired, dvals, moreinfo)
+function _samplebins!(coglist, degrees, realness, bins, desired, dvals, moreinfo)
 
     #=
     tie sample counting
@@ -104,7 +104,7 @@ function _samplebins!(coglist, bins, desired, dvals, moreinfo)
     end
 end
 
-function _samplebins!(rng, coglist, bins, desired, dvals, moreinfo)
+function _samplebins!(rng, coglist, degrees, realness, bins, desired, dvals, moreinfo)
 
     #=
     tie sample counting

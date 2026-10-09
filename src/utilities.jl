@@ -5,44 +5,41 @@ function sort_edgelist!(ru, c1, c2)
     end
 end
 
-function psn_edgelist(graph, cogls)
-    # edgelist
-    return hcat(
-        fill(get_prop(graph, 1, :name), length(cogls)),
-        [c[1] for c in cogls],
-        [c[2] for c in cogls]
-    )
-end
+"""
+        psn_edgelists(vertlists; df_out = true)
 
+Flatten the output of `samplenetwork` (a dictionary from perceiver name to
+that perceiver's list) into one edgelist with a row per (perceiver, pair).
+Columns: `perceiver`, `from`, `to`; if the lists were generated with
+`moreinfo = true`, also `bin` (the degree bin, e.g., "1:2" or "3") and `real`
+(whether the pair is a real tie). Each pair is sorted alphanumerically.
+Return a `DataFrame`, or a `Matrix` if `df_out` is false.
+"""
 function psn_edgelists(vertlists; df_out = true)
-    el = Matrix{String}(undef, 0, 5);
-    # edgelist
+    moreinfo = !isempty(vertlists) && first(values(vertlists)) isa Tuple
+
+    perceiver = String[]; from = String[]; to = String[]
+    bin = String[]; real = Bool[]
+
     for (k, v) in vertlists
-        cogls = v[1]
-        v
-        el = vcat(
-            el,
-            hcat(
-                fill(k, length(cogls)),
-                [c[1] for c in cogls],
-                [c[2] for c in cogls],
-                v[2],
-                v[3]
-            )
-        )
+        pairs = moreinfo ? v[1] : v
+        for (a, b) in pairs
+            push!(perceiver, k)
+            push!(from, min(a, b))
+            push!(to, max(a, b))
+        end
+        if moreinfo
+            append!(bin, string.(v[2]))
+            append!(real, v[3])
+        end
     end
 
-    if df_out
-        el = DataFrame(
-            perceiver = el[:,1],
-            from = el[:, 2],
-            to = el[:, 3],
-            bin = el[:, 4],
-            real = el[:, 5],
-        )
-        sort_edgelist!(el, 2, 3)
+    el = DataFrame(perceiver = perceiver, from = from, to = to)
+    if moreinfo
+        el.bin = bin
+        el.real = real
     end
-    return el
+    return df_out ? el : Matrix(el)
 end
 
 function edgelist(graph; df_out = true)
@@ -82,7 +79,7 @@ function tuplesort!(pls)
 end
 
 """
-        tuplelize(alters1, alters2; sort = true)
+        tupleize(alters1, alters2; sort = true)
 
 Create a vector of tuples from the columns of an edgelist. If asymmetric, sort should be false.
 """

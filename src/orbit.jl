@@ -97,8 +97,6 @@ end
 
 function addreals!(gₘₐₓ, gd, d)
     for e in edges(gd)
-        src(e); dst(e);
-        # get_prop(gd, e, :d)
         srcname = get_prop(gd, src(e), :name)
         dstname = get_prop(gd, dst(e), :name)
         

@@ -21,11 +21,11 @@ Feltham, E., Forastiere, L., & Christakis, N.A. (2025). "Cognitive representatio
 
 ## Installation
 
-This package is not registered, install from GitHub:
+This package is not registered, install from GitHub (requires Julia 1.10 or later):
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/[your-org]/SamplingPerceivedNetworks.jl")
+Pkg.add(url="https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl")
 ```
 
 ## Quick Start
@@ -45,7 +45,8 @@ set_indexing_prop!(graph, :name)
 desired = [(5, 5), (10, 10), (10, 10)]  # for d=1, d=2, d=3
 
 # Sample for entire network
-sampling_lists = samplenetwork(graph; desired=desired, dvals=1:3, dₘₐₓ=3)
+# (dₘₐₓ is the largest value in dvals)
+sampling_lists = samplenetwork(graph; desired=desired, dvals=1:3)
 
 # Convert to edgelist DataFrame for export
 using DataFrames, CSV
@@ -65,13 +66,21 @@ See `example.jl` for a complete working example using a Watts-Strogatz small-wor
 - `samplingbins(orbit, dₘₐₓ)` - Create sampling bins indexed by (distance, reality) tuples
 
 ### Stratified Sampling
-- `samplebins(bins; desired, dvals)` - Sample relationships for one perceiver
-- `samplenetwork(graph; desired, dvals, dₘₐₓ)` - Generate lists for entire network
+- `samplebins([rng,] bins; desired, dvals, moreinfo)` - Sample relationships for one perceiver
+- `samplenetwork([rng,] graph[, consents]; desired, dvals, moreinfo, shuffle)` - Generate lists for entire network. With `consents` (a `Dict` from name to 0-3, required for every node), only perceivers who consented to the survey (1 or 2) get a list, and only pairs where both consented to photos (2 or 3) are shown
 
 ### Utilities
-- `psn_edgelists(vertlists)` - Convert sampling output to DataFrame edgelist
+- `psn_edgelists(vertlists)` - Convert sampling output to DataFrame edgelist (columns `perceiver`, `from`, `to`, and with `moreinfo = true`, `bin` and `real`)
 - `edgelist(graph)` - Extract sociocentric edgelist from graph
 - `tupleize(alters1, alters2)` - Create sorted tuples from edgelist columns
+
+## Tests
+
+```julia
+using Pkg; Pkg.activate("."); Pkg.test()
+```
+
+The tests check the orbit and sampling bins against a brute-force computation from shortest-path distances on random graphs, the stratified draw (including how a short bin passes its shortfall to later bins), consent filtering, and the edgelist outputs.
 
 ## Dependencies
 
@@ -80,6 +89,7 @@ Built on [JuliaGraphs](https://juliagraphs.org):
 - MetaGraphs.jl: Graphs with metadata on vertices/edges
 - Random.jl: Random number generation for sampling
 - StatsBase.jl: Statistical sampling functions
+- DataFrames.jl: Edgelist output
 
 ## Features
 

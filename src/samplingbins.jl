@@ -63,7 +63,7 @@ function _samplingbins!(population, orbit, consents)
 end
 
 """
-        consented!(p1, p2, consents)
+        consented(p1, p2, consents)
 
 Check whether a node in the pair has not consented. If so, signal 'false'.
 
@@ -75,9 +75,5 @@ Check whether a node in the pair has not consented. If so, signal 'false'.
 include edges where both p1 and p2 are either 2 and 3.
 """
 function consented(p1, p2, consents)
-    return if (consents[p1] < 2) | (consents[p2] < 2)
-        false
-    else
-        true
-    end
+    return consents[p1] >= 2 && consents[p2] >= 2
 end

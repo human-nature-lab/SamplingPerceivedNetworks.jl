@@ -37,15 +37,13 @@ function samplebins(
 )
 
     # if moreinfo, initialize objects for storage
-    if moreinfo
-        degrees = Vector{Union{Int, UnitRange{Int}}}()
-        realness = Vector{Bool}()
-    end
+    degrees = Vector{Union{Int, UnitRange{Int}}}()
+    realness = Vector{Bool}()
 
     # initialize object for list storage
     coglist = Vector{Tuple{String, String}}()
     
-    _samplebins!(rng, coglist, bins, desired, dvals, moreinfo)
+    _samplebins!(rng, coglist, degrees, realness, bins, desired, dvals, moreinfo)
 
     if moreinfo
         return coglist, degrees, realness
@@ -60,14 +58,12 @@ function samplebins(
     moreinfo = false
 )
 
-    if moreinfo
-        degrees = Vector{Union{Int, UnitRange{Int}}}()
-        realness = Vector{Bool}()
-    end
+    degrees = Vector{Union{Int, UnitRange{Int}}}()
+    realness = Vector{Bool}()
 
     coglist = Vector{Tuple{String, String}}()
     
-    _samplebins!(coglist, bins, desired, dvals, moreinfo)
+    _samplebins!(coglist, degrees, realness, bins, desired, dvals, moreinfo)
 
     if moreinfo
         return coglist, degrees, realness

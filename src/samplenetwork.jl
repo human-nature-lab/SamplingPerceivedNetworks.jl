@@ -8,8 +8,8 @@ two cases:
 2. a unit range over multiple degree distances\
 =#
 
-VerticesList1 = Dict{String, Vector{Tuple{String, String}}};
-VerticesList2 = Dict{String, Tuple{Vector{Tuple{String, String}}, Vector{Union{Int, UnitRange}}, Vector{Bool}}};
+const VerticesList1 = Dict{String, Vector{Tuple{String, String}}};
+const VerticesList2 = Dict{String, Tuple{Vector{Tuple{String, String}}, Vector{Union{Int, UnitRange}}, Vector{Bool}}};
 
 function verticeslist(moreinfo)
     return if !moreinfo
@@ -47,6 +47,7 @@ function samplenetwork(
     graph;
     desired = ((5, 5), (5, 5), (5, 5), (5, 5)),
     dvals = (1, 2, 3, 4),
+    moreinfo = false,
     shuffle = true
 )    
 
@@ -81,28 +82,20 @@ function _samplenet!(
     verticeslists, graph, dₘₐₓ, desired, dvals, moreinfo, shuffle
 )
     for v in vertices(graph)
-        rad = vertexorbit(graph, v, dₘₐₓ); # 2.79 MiB
+        nodename = get_prop(graph, v, :name)
+        rad = vertexorbit(graph, v, dₘₐₓ);
         bins = samplingbins(rad, dₘₐₓ);
-    
-        verticeslists[get_prop(graph, v, :name)] = samplebins(
+
+        verticeslists[nodename] = samplebins(
             bins;
             desired = desired,
             dvals = dvals,
             moreinfo = moreinfo
         )
 
-        if shuffle
-            # length of the list of pairs
-            ln = length(verticeslists[get_prop(graph, v, :name)][1]);
-            if ln > 1 # if there is more than one valid pair
-                # shuffle the pairs for random presentation
-                idx = sample(collect(1:ln), ln; replace = false)
-                # iterate over the info types (pairs, degree, realness)
-                for i in eachindex(verticeslists[get_prop(graph, v, :name)])
-                    permute!(verticeslists[get_prop(graph, v, :name)][i], idx)
-                end
-            end
-        end
+        _finishlist!(
+            verticeslists[nodename], moreinfo, shuffle, Random.default_rng()
+        )
     end
 end
 
@@ -144,6 +137,16 @@ function samplenetwork(
 )    
 
     dₘₐₓ = maximum(reduce(vcat, dvals))
+
+    # every node must have a consent status
+    missingnames = [
+        nm for nm in (get_prop(graph, v, :name) for v in vertices(graph))
+        if !haskey(consents, nm)
+    ]
+    isempty(missingnames) || throw(ArgumentError(
+        "consents has no entry for $(length(missingnames)) node(s), " *
+        "e.g., $(first(missingnames))"
+    ))
 
     verticeslists = verticeslist(moreinfo)
 

@@ -1,5 +1,31 @@
 # _samplenet!.jl
 
+#=
+Finish one perceiver's list: sort the pairs alphanumerically and optionally
+shuffle them for random presentation. With moreinfo the list is
+(pairs, degrees, realness); only the pairs are sorted, and all three
+are permuted together.
+=#
+function _finishlist!(lst, moreinfo, shuffle, rng)
+    pairs = moreinfo ? lst[1] : lst
+    tuplesort!(pairs)
+
+    if shuffle
+        ln = length(pairs)
+        if ln > 1
+            idx = sample(rng, collect(1:ln), ln; replace = false)
+            if moreinfo
+                for k in 1:3
+                    permute!(lst[k], idx)
+                end
+            else
+                permute!(lst, idx)
+            end
+        end
+    end
+    return lst
+end
+
 function _samplenet!(
     seeds,
     verticeslists,
@@ -36,32 +62,9 @@ function _samplenet!(
                 desired = desired, dvals = dvals, moreinfo = moreinfo
             )
 
-            # sort the edges alphanumericaly
-            tuplesort!(verticeslists[nodename])
-
-            if shuffle
-                # length of the list of pairs
-                # drop [1] index since we don't keep
-                # (pairs, degree, realness) -> only pairs
-                ln = length(verticeslists[nodename]);
-                if ln > 1 # if there is more than one valid pair
-                    # shuffle the pairs for random presentation
-                    idx = sample(
-                        MersenneTwister(seed), collect(1:ln), ln;
-                        replace = false
-                    )
-                    # iterate over the info types (pairs, degree, realness)
-                    # we don't store all of these for branch "Server"
-                    # so don't iterate
-                    if !moreinfo
-                        permute!(verticeslists[nodename], idx)
-                    else
-                        for k in 1:3
-                            permute!(verticeslists[nodename][k], idx)
-                        end
-                    end
-                end
-            end
+            _finishlist!(
+                verticeslists[nodename], moreinfo, shuffle, MersenneTwister(seed)
+            )
         end # (consents[nodename]...
     end # (v,seed)
 end
@@ -78,34 +81,19 @@ function _samplenet!(
 )
 
     for (v, seed) in zip(vertices(graph), seeds)
-        rad = vertexorbit(graph, v, dₘₐₓ); # 2.79 MiB
+        nodename = get_prop(graph, v, :name)
+        rad = vertexorbit(graph, v, dₘₐₓ);
         bins = samplingbins(rad, dₘₐₓ);
-    
-        verticeslists[get_prop(graph, v, :name)] = samplebins(
+
+        # only one call per seed number (i.e., one seed per villager)
+        verticeslists[nodename] = samplebins(
             MersenneTwister(seed),
             bins;
             desired = desired, dvals = dvals, moreinfo = moreinfo
         )
 
-        # sort the edges alphanumericaly
-        tuplesort!(verticeslists[nodename])
-
-        if shuffle
-            # length of the list of pairs
-            # drop [1] index since we don't keep
-            # (pairs, degree, realness) -> only pairs
-            ln = length(verticeslists[get_prop(graph, v, :name)]);
-            if ln > 1 # if there is more than one valid pair
-                # shuffle the pairs for random presentation
-                idx = sample(
-                    MersenneTwister(seed), collect(1:ln), ln;
-                    replace = false
-                )
-                # iterate over the info types (pairs, degree, realness)
-                # we don't store all of these for branch "Server"
-                # so don't iterate
-                permute!(verticeslists[get_prop(graph, v, :name)], idx)
-            end
-        end
+        _finishlist!(
+            verticeslists[nodename], moreinfo, shuffle, MersenneTwister(seed)
+        )
     end
 end

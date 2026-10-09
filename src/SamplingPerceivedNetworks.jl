@@ -2,7 +2,7 @@
 
 module SamplingPerceivedNetworks
 
-    using Graphs, MetaGraphs, Random
+    using Graphs, MetaGraphs, Random, DataFrames
     import StatsBase.sample
 
     include("orbit.jl")
@@ -16,6 +16,6 @@ module SamplingPerceivedNetworks
     export
         vertexorbit, vertexorbit_d,
         samplingbins, samplebins, samplenetwork,
-        sort_edgelist!, psn_edgelist, psn_edgelists, edgelist, countdesired,
+        sort_edgelist!, psn_edgelists, edgelist, countdesired,
         tuplesort!, tupleize
 end

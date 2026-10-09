@@ -10,8 +10,7 @@
 import Pkg; Pkg.activate(pwd())
 
 # Load required packages
-using Graphs, MetaGraphs, SamplingPerceivedNetworks, Random, DataFrames, CSV
-import StatsBase.sample
+using Graphs, MetaGraphs, SamplingPerceivedNetworks, Random
 
 # Set seed for reproducible results
 Random.seed!(2022)
@@ -80,9 +79,24 @@ vertlists = samplenetwork(
     graph;
     desired = ((10, 10), (5, 5), (5, 5)),
     dvals = (1:2, 3, 4),
-    dₘₐₓ = dₘₐₓ,
     moreinfo = true,
     shuffle = true  # Randomize order of relationships within each list
+)
+
+#=
+3b. WITH CONSENTS
+
+Consent statuses (0-3; see `consented`). Only perceivers who consented to the
+survey (1 or 2) get a list, and only pairs where both consented to photos
+(2 or 3) are shown. A status is required for every node.
+=#
+
+consents = Dict(get_prop(graph, i, :name) => 2 for i in 1:nv(graph))
+vertlists_c = samplenetwork(
+    MersenneTwister(2022), graph, consents;
+    desired = ((10, 10), (5, 5), (5, 5)),
+    dvals = (1:2, 3, 4),
+    moreinfo = true
 )
 
 #=
@@ -98,8 +112,9 @@ pel = psn_edgelists(vertlists)
 # Extract true sociocentric network as edgelist
 el = edgelist(graph)
 
-# Write to CSV files
+# Write to CSV files (requires CSV.jl: `Pkg.add("CSV")`)
 # pel.csv: Sampling lists for all perceivers
 # el.csv: True sociocentric network
-CSV.write("pel.csv", pel)
-CSV.write("el.csv", el)
+# using CSV
+# CSV.write("pel.csv", pel)
+# CSV.write("el.csv", el)
