@@ -1,6 +1,6 @@
 name = "SamplingPerceivedNetworks"
 uuid = "d0a4d0c9-8b3f-492c-85dc-357c09e2ebfe"
-version = "0.1.0"
+version = "2.0.0"
 authors = ["Eric Martin Feltham <eric.feltham@yale.edu>"]
 
 [deps]

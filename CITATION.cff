@@ -1,0 +1,43 @@
+# Citation metadata for the software. GitHub shows it as "Cite this repository";
+# Zenodo reads it when a GitHub release is archived.
+# TODO before the first archived release:
+#   - add the author's ORCID (orcid: "https://orcid.org/XXXX-XXXX-XXXX-XXXX") and affiliation;
+#   - add coauthors/contributors if any should be credited for the software;
+#   - set date-released to the release date (and keep version in step with Project.toml);
+#   - after Zenodo mints the DOI, add it under "identifiers" (the concept DOI, which resolves to the latest version).
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below, and cite Feltham, Forastiere and Christakis (2025) for the method."
+type: software
+title: "SamplingPerceivedNetworks.jl"
+abstract: >-
+  Distance-stratified sampling of pairs for cognitive social structure (CSS)
+  surveys: per-perceiver lists of real and counterfactual relationships drawn
+  from the perceiver's social orbit, the deployed fill and isolate rules, an
+  optional outer bin, and exact inclusion probabilities for design-based
+  weighting.
+authors:
+  - family-names: Feltham
+    given-names: Eric Martin
+version: 2.0.0
+license: MIT
+repository-code: "https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl"
+url: "https://human-nature-lab.github.io/SamplingPerceivedNetworks.jl"
+keywords:
+  - cognitive social structures
+  - network sampling
+  - inclusion probabilities
+  - social networks
+  - Julia
+references:
+  - type: article
+    title: "Cognitive representations of social networks in isolated villages"
+    authors:
+      - family-names: Feltham
+        given-names: Eric
+      - family-names: Forastiere
+        given-names: Laura
+      - family-names: Christakis
+        given-names: Nicholas A.
+    journal: "Nature Human Behaviour"
+    year: 2025
+    doi: "10.1038/s41562-025-02221-6"
