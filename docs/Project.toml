@@ -1,0 +1,12 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+SamplingPerceivedNetworks = "d0a4d0c9-8b3f-492c-85dc-357c09e2ebfe"
+
+[sources]
+SamplingPerceivedNetworks = {path = "/Users/emf/.julia/dev/SamplingPerceivedNetworks"}
+
+[compat]
+Documenter = "1"

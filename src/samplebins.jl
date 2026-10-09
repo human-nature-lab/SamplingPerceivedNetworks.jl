@@ -8,18 +8,16 @@
             moreinfo = false
         )
 
-Assumes that `dvals` is monotonically ordered.
+Sample from `bins` to generate the CSS list for one perceiver, as a vector of
+pairs. With `moreinfo = true`, also return the degree bin and the reality of
+each pair. `dvals` must be in increasing order.
 
-Sample from `bins` to generate the CSS list for a perceiver (surveyee), as a series of pairs. Optionally, output `moreinfo`: the degree distance and reality of the tie.
-
-If `rng` is specified, use the same rng value for each call to sample. This will
-be the perceiver's rng value assigned earlier in the procedure.
-N.B. that sample is not called on the same list twice, so it is fine to specify one number in the argument to sample.
+If `rng` is given, every draw uses it. `samplenetwork` passes each perceiver's
+own seeded generator.
 
 When a bin, given as (degree, reality), is smaller than the desired number, other bins are oversampled so that the total desired number (or the maximum possible number) is reached for that survey.
 
-Compensation procedure:
-- try to get as many as possible from the real bin, then try to fill that gap with oversampling for the real bin for the next degree. If there is a gap after d_max, roll the gap over and oversample fake ties.
+Shortfalls are carried forward. A real bin that cannot supply the desired number is topped up from the real bin at the next degree. A real shortfall remaining after the last degree is made up from the counterfactual bins.
 
 Arguments
 ≡≡≡≡≡≡≡≡≡≡≡

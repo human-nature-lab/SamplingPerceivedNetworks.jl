@@ -29,16 +29,14 @@ end
             shuffle = true
         )
 
-Given an unweighted and undirected sociocentric network, generate
-a list of relationships to show each person in the network, based on the
-"social orbit" procedure. Sample a number at each degree, for real vs.
-counterfactual, according to the amounts specified by desired for each degree
-given by `dvals`.
+Generate, for each person in an unweighted, undirected sociocentric network,
+a list of relationships to show them, using the social orbit procedure. For
+each degree bin in `dvals`, sample real and counterfactual pairs in the
+numbers given by `desired`.
 
-`desired` and `dvals` are in the same order. `dvals` contains either
-integers, or integer ranges (for the combination of degrees into one bin). `desired` is a list of tuples, where each element corresponds to the
-degree bin specified by `dvals`, at that index.
-The format is (# real, # counterfactual)).
+`dvals` contains integers or integer ranges (a range combines several degrees
+into one bin). `desired` has one tuple `(# real, # counterfactual)` for each
+element of `dvals`, in the same order.
 
 Optionally specify a random number generator (rng).
 """
@@ -92,17 +90,14 @@ end
             shuffle = true
         )
 
-Given an unweighted and undirected sociocentric network, generate
-a list of relationships to show each person in the network, based on the
-"social orbit" procedure. Sample a number at each degree, for real vs.
-counterfactual, according to the amounts specified by desired for each degree
-given by `dvals`.
+Generate, for each person in an unweighted, undirected sociocentric network,
+a list of relationships to show them, using the social orbit procedure. For
+each degree bin in `dvals`, sample real and counterfactual pairs in the
+numbers given by `desired`.
 
-`desired` and `dvals` are in the same order. `dvals` contains either
-integers, or integer ranges (for the combination of degrees into one bin).
-`desired` is a list of tuples, where each element corresponds to the
-degree bin specified by `dvals`, at that index.
-The format is (# real, # counterfactual)).
+`dvals` contains integers or integer ranges (a range combines several degrees
+into one bin). `desired` has one tuple `(# real, # counterfactual)` for each
+element of `dvals`, in the same order.
 
 Optionally specify a random number generator (rng).
 

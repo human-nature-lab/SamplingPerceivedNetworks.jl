@@ -13,8 +13,9 @@ end
 """
         samplingbins(orbit, dₘₐₓ)
 
-Generate all possible edges that could appear in a sampling bin. These are the
-sets from which we sample.
+Group every candidate pair in `orbit` (the output of `vertexorbit`) into
+sampling bins, keyed by `(distance, is_real)`. Each bin is a vector of name
+pairs, and the bins are the sets from which `samplebins` draws.
 """
 function samplingbins(orbit, dₘₐₓ)
     population = setuplists(dₘₐₓ)
@@ -25,16 +26,14 @@ end
 """
         samplingbins(orbit, dₘₐₓ, consents)
 
-Generate all possible edges that could appear in a sampling bin. These are the
-sets from which we sample.
-
-Filter out pairs that are not consented for their photos.
+As `samplingbins(orbit, dₘₐₓ)`, omitting pairs in which either node has not
+consented to photos (consent code below 2).
 
 Arguments
 ≡≡≡≡≡≡≡≡≡≡≡
-- orbit
-- dₘₐₓ
-- consents: the map from each node id to its consent status.
+- orbit: the output of `vertexorbit`
+- dₘₐₓ: the maximum distance the orbit was built with
+- consents: a map from each node name to its consent code
 """
 function samplingbins(orbit, dₘₐₓ, consents)
     population = setuplists(dₘₐₓ)
@@ -73,14 +72,13 @@ end
 """
         consented(p1, p2, consents)
 
-Check whether a node in the pair has not consented. If so, signal 'false'.
+Return true if both nodes in the pair may appear in a photo, that is, if both
+have consent code 2 or 3.
 
-0: not consented to either
-1: consented to survey
-2: consented to survey and photo
-3: consented to photo, but not survey
-
-include edges where both p1 and p2 are either 2 and 3.
+0: no consent
+1: survey only
+2: survey and photo
+3: photo only
 """
 function consented(p1, p2, consents)
     for p in (p1, p2)

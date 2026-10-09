@@ -5,11 +5,15 @@
 """
         vertexorbit(graph::T, vertex, dₘₐₓ; index = true) where T <: MetaGraph
 
-Generate the social orbit for a node (vertex) on an undirected,
-unweighted network (graph, of type MetaGraph). The orbit extends to individuals at d_max away from the perceiver node.
+Generate the social orbit of a perceiver on an undirected, unweighted network
+(a `MetaGraph` whose vertices have a `:name` property). The orbit contains
+everyone within `dₘₐₓ` steps of the perceiver, who is removed from the returned
+graph. Edges carry the properties `:d` (distance) and `:real` (whether the tie
+exists in `graph`).
 
-if index is true, vertex refers to the index of the vertex; otherwise,
-vertex refers to the name of the node.
+If `index` is true, `vertex` is the vertex index; otherwise it is the node name,
+which requires `set_indexing_prop!(graph, :name)`. `name` is the property that
+holds node names.
 """
 function vertexorbit(graph::T, vertex, dₘₐₓ; index = true, name = :name) where T <: MetaGraph
     if index
@@ -43,8 +47,8 @@ end
 """
         vertexorbit_d(rad, d) where T <: MetaGraph
 
-Restrict the social orbit for a node to the ties that come into existence at
-d. That is, capture only the ties that form at d as we move from 1 to dmax. This is the marginal set of ties, removing those above d and and those that exist at d-1,...,1. Where rad is the output graph from vertexorbit().
+Restrict a social orbit to the ties that first appear at distance `d`, removing
+those at all other distances. `rad` is the output of `vertexorbit`.
 """
 function vertexorbit_d(rad::T, d) where T <: MetaGraph
     radᵢ = deepcopy(rad);

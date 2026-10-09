@@ -55,7 +55,7 @@ end
 """
         edgelist(graph; df_out = true)
 
-Extract the sociocentric edgelist of `graph` (a MetaGraph with `:name`
+Extract the sociocentric edgelist of `graph` (a `MetaGraph` with `:name`
 vertex properties) as node names. Return a `DataFrame` with columns `from` and
 `to`, each row sorted alphanumerically; if `df_out` is false, return the raw
 `Matrix` of names in the graph's edge order (rows are not sorted).
