@@ -8,6 +8,7 @@ module SamplingPerceivedNetworks
     include("orbit.jl")
     include("samplingbins.jl")
     include("_samplenet!.jl")
+    include("inclusion.jl")
     include("samplebins.jl")
     include("_samplebins!.jl")
     include("samplenetwork.jl")
@@ -15,7 +16,8 @@ module SamplingPerceivedNetworks
 
     export
         vertexorbit, vertexorbit_d,
-        samplingbins, samplebins, samplenetwork,
+        samplingbins, samplebins, samplenetwork, inclusionprobs,
+        deployed_design, merged_design,
         sort_edgelist!, psn_edgelists, edgelist, countdesired,
         tuplesort!, tupleize
 end

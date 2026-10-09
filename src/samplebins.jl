@@ -4,7 +4,7 @@
         samplebins(
             [rng],
             bins;
-            desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
+            desired = deployed_design.desired, dvals = deployed_design.dvals,
             moreinfo = false
         )
 
@@ -32,7 +32,7 @@ Arguments
 function samplebins(
     rng,
     bins;
-    desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
+    desired = deployed_design.desired, dvals = deployed_design.dvals,
     moreinfo = false
 )
 
@@ -56,7 +56,7 @@ end
 
 function samplebins(
     bins;
-    desired = ((10, 10), (5, 5), (5, 5)), dvals = (1:2, 3, 4),
+    desired = deployed_design.desired, dvals = deployed_design.dvals,
     moreinfo = false
 )
     return samplebins(

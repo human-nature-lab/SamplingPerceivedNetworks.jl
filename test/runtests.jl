@@ -278,3 +278,95 @@ end
     cm = Dict{String,Union{Int,Missing}}("p$i" => 2 for i in 1:20); cm["p3"] = missing
     @test_throws ArgumentError samplenetwork(MersenneTwister(1), mgs, cm)
 end
+
+@testset "presets" begin
+    @test deployed_design.dvals == (1, 2, 3, 4)
+    @test all(==((5, 5)), deployed_design.desired)
+    @test countdesired(deployed_design.desired) == 40
+    @test countdesired(merged_design.desired) == 40
+
+    # samplebins and samplenetwork default to the deployed design
+    mg = named_graph(watts_strogatz(60, 6, 0.3; rng = MersenneTwister(11)))
+    bins = samplingbins(vertexorbit(mg, 1, 4), 4)
+    @test samplebins(MersenneTwister(1), bins) ==
+          samplebins(MersenneTwister(1), bins; deployed_design...)
+    @test samplenetwork(MersenneTwister(2), mg) ==
+          samplenetwork(MersenneTwister(2), mg; deployed_design...)
+
+    # the merged preset is accepted and gives the merged bin
+    _, deg, _ = samplebins(MersenneTwister(1), bins; merged_design..., moreinfo = true)
+    @test any(==(1:2), deg)
+end
+
+@testset "inclusionprobs" begin
+    # hand-computed: path 1-2-3-4-5 with a chord 2-4, perceiver 1, d up to 3
+    mg = named_graph(SimpleGraph(Edge.([(1,2),(2,3),(3,4),(4,5),(2,4)])))
+    kw = (desired = ((1, 1), (1, 1), (1, 1)), dvals = (1, 2, 3))
+    df = inclusionprobs(mg, 1; kw...)
+    # bins: (2, real) = 3 pairs, (3, real) = 1, (3, fake) = 2; d = 1 is empty.
+    # Real: d1 -> 0 (empty), gap 1 -> d2 draws 1 + 1 = 2 of 3, d3 draws 1 of 1
+    # (ws 3, ts 3). Fake: d1 and d2 are empty (ws 5, ts 3), so d3 draws
+    # 1 + 2 = 3 but has only 2: both pairs, pi = 1.
+    p(a, b) = only(df[(df.from .== a) .& (df.to .== b), :pi])
+    @test nrow(df) == 6
+    @test all(p.(["p2","p2","p3"], ["p3","p4","p4"]) .≈ 2/3)
+    @test p("p4", "p5") ≈ 1
+    @test p("p2", "p5") ≈ 1 && p("p3", "p5") ≈ 1
+    @test Set(df.bin) == Set(["2", "3"])
+
+    # the probabilities in each (bin, reality) cell sum to the number drawn
+    mg = named_graph(watts_strogatz(60, 6, 0.3; rng = MersenneTwister(12)))
+    for v in (1, 17, 42)
+        df = inclusionprobs(mg, v)
+        @test sum(df.pi) <= 40 + 1e-9  # never more than the list length
+        @test all(0 .< df.pi .<= 1)
+    end
+
+    # empirical inclusion frequency = pi, for the deployed design and one with
+    # a short bin (so that carry-over is active), with and without consents
+    function check(mg, v, consents, kw; R = 20_000, tol = 0.02)
+        df = inclusionprobs(mg, v, consents; kw...)
+        nm = get_prop(mg, v, :name)
+        hits = Dict(
+            (r.from, r.to) => 0 for r in eachrow(df)
+        )
+        rng = MersenneTwister(99)
+        bins = SPN._vertexbins(mg, v, maximum(maximum, kw.dvals), consents)
+        for _ in 1:R
+            for (a, b) in samplebins(rng, bins; kw...)
+                hits[min(a, b), max(a, b)] += 1
+            end
+        end
+        @test all(
+            abs(hits[r.from, r.to] / R - r.pi) < tol for r in eachrow(df)
+        )
+        # every listed pair is a candidate, so the expected list length matches
+        @test sum(values(hits)) / R ≈ sum(df.pi) atol = 0.1
+    end
+    sparse = named_graph(watts_strogatz(30, 4, 0.2; rng = MersenneTwister(13)))
+    for v in (1, 9)
+        check(sparse, v, nothing, deployed_design)
+        check(sparse, v, nothing, (desired = ((3, 3), (3, 3), (6, 6)), dvals = (1, 2, 3)))
+        check(sparse, v, nothing, merged_design)
+    end
+    names = [get_prop(sparse, i, :name) for i in vertices(sparse)]
+    cons = Dict(nm => mod(i, 5) == 0 ? 1 : 2 for (i, nm) in enumerate(names))
+    check(sparse, 1, cons, deployed_design)
+
+    # network version: perceivers, consents, and agreement with the single form
+    all_df = inclusionprobs(sparse; deployed_design...)
+    @test Set(all_df.perceiver) == Set(names)
+    one = inclusionprobs(sparse, 3)
+    sub = all_df[all_df.perceiver .== names[3], Not(:perceiver)]
+    @test sort(sub, [:from, :to, :real]) == sort(one, [:from, :to, :real])
+    con2 = Dict(nm => [0, 1, 2, 3][mod1(i, 4)] for (i, nm) in enumerate(names))
+    cdf = inclusionprobs(sparse, con2)
+    @test Set(cdf.perceiver) == Set(nm for (i, nm) in enumerate(names) if con2[nm] in (1, 2))
+    # only pairs of nodes with photo consent (code >= 2) appear
+    ok = Set(nm for nm in names if con2[nm] >= 2)
+    @test all(in(ok), cdf.from) && all(in(ok), cdf.to)
+
+    # argument validation matches samplenetwork
+    @test_throws ArgumentError inclusionprobs(sparse, Dict(names[1] => 2))
+    @test_throws ArgumentError inclusionprobs(sparse, 1; desired = ((1, 1),), dvals = (1, 2))
+end

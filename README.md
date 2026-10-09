@@ -69,6 +69,10 @@ See `example.jl` for a complete working example using a Watts-Strogatz small-wor
 - `samplebins([rng,] bins; desired, dvals, moreinfo)` - Sample relationships for one perceiver
 - `samplenetwork([rng,] graph[, consents]; desired, dvals, moreinfo, shuffle)` - Generate lists for entire network. With `consents` (a `Dict` from name to 0-3, required for every node), only perceivers who consented to the survey (1 or 2) get a list, and only pairs where both consented to photos (2 or 3) are shown
 
+### Design Presets and Inclusion Probabilities
+- `deployed_design`, `merged_design` - `desired` and `dvals` presets, splatted in with `samplenetwork(graph; deployed_design...)`. `deployed_design` (4 separate degree bins of 5 real + 5 counterfactual) is the Honduras CSS design and the default; `merged_design` (degrees 1-2 combined at 10 + 10, then 5 + 5 at degrees 3 and 4) was never deployed
+- `inclusionprobs(graph[, v][, consents]; desired, dvals)` - Exact probability `pi` that each pair is on a perceiver's list (`1/pi` is the estimation weight), computed from the graph with no random sampling, including the gap carry-over and consent filtering. Returns a DataFrame (`perceiver`, `from`, `to`, `bin`, `real`, `pi`; no `perceiver` column when `v` is given). Covers the stratified stage only, not a top-up of short lists or isolates
+
 ### Utilities
 - `psn_edgelists(vertlists)` - Convert sampling output to DataFrame edgelist (columns `perceiver`, `from`, `to`, and with `moreinfo = true`, `bin` and `real`)
 - `edgelist(graph)` - Extract sociocentric edgelist from graph
@@ -80,7 +84,7 @@ See `example.jl` for a complete working example using a Watts-Strogatz small-wor
 using Pkg; Pkg.activate("."); Pkg.test()
 ```
 
-The tests check the orbit and sampling bins against a brute-force computation from shortest-path distances on random graphs, the stratified draw (including how a short bin passes its shortfall to later bins), consent filtering, and the edgelist outputs.
+The tests check that `inclusionprobs` agrees with empirical inclusion frequencies over many draws (with carry-over active and with consents). They also check the orbit and sampling bins against a brute-force computation from shortest-path distances on random graphs, the stratified draw (including how a short bin passes its shortfall to later bins), consent filtering, and the edgelist outputs.
 
 ## Dependencies
 

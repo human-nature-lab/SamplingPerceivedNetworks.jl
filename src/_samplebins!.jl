@@ -47,83 +47,58 @@ function _checkspec(desired, dvals)
 end
 
 """
+        _quotas(realsizes, fakesizes, desired)
+
+Number to draw from each real and each counterfactual bin, given the bin
+sizes: `(nreal, nfake)`, vectors with one entry per element of `desired`.
+Depends only on the sizes, so it is shared by the sampler and by
+`inclusionprobs`.
+
+A bin smaller than desired passes its shortfall to the later bins. A shortfall
+left over after the last real bin carries into the counterfactual bins.
+"""
+function _quotas(realsizes, fakesizes, desired)
+    ws = 0 # number wanted (over the iterations)
+    ts = 0 # number actually drawn (over the iterations)
+    nr = zeros(Int, length(desired))
+    nf = zeros(Int, length(desired))
+
+    # real ties
+    for (i, sz) in enumerate(desired)
+        # (ws - ts) is the gap: units still wanted from earlier bins
+        nr[i] = min(realsizes[i], sz[1] + (ws - ts))
+        ws += sz[1]
+        ts += nr[i]
+    end
+
+    # fake ties: any gap left over across the real ties carries over
+    for (i, sz) in enumerate(desired)
+        nf[i] = min(fakesizes[i], sz[2] + (ws - ts))
+        ws += sz[2]
+        ts += nf[i]
+    end
+    return nr, nf
+end
+
+"""
         _samplebins!(rng, coglist, degrees, realness, bins, desired, dvals, moreinfo)
 
 See samplebins.
 """
 function _samplebins!(rng, coglist, degrees, realness, bins, desired, dvals, moreinfo)
+    realsets = [mk_binset(bins, d, true) for d in dvals]
+    fakesets = [mk_binset(bins, d, false) for d in dvals]
+    nr, nf = _quotas(length.(realsets), length.(fakesets), desired)
 
-    #=
-    tie sample counting
-    - used to account for smaller-than-desired bins and consequent
-      oversampling of other bins to fill the gap.
-    
-    ws: total wanted up to that point
-    ts: number actually sampled up to that point
-    (ws - ts) gives the sampling gap
-    =#
-
-    ws = 0; # tracks the number wanted (over the iterations)
-    ts = 0; # tracks the number actually sampled (over the iterations)
-
-    # real ties
-    for (sz, d) in zip(desired, dvals)
-        rw = sz[1] # real wanted
-
-        # setup: get the relevant object from which to sample
-
-        realset = mk_binset(bins, d, true)
-
-        # execution: perform sampling, adjusting for ws and ts
-
-        gap = ws - ts # num. units still wanted (try to pick these up)
-
-        rnum = min(length(realset), rw + gap) # this is the number that will actually be sampled at this step
-        append!(coglist, sample(rng, realset, rnum; replace = false))
-        
-        if moreinfo
-            append!(degrees, fill(d, rnum))
-            append!(realness, fill(true, rnum))
+    # real ties first, then counterfactual (the order fixes the rng stream)
+    for (sets, ns, rl) in ((realsets, nr, true), (fakesets, nf, false))
+        for (set, n, d) in zip(sets, ns, dvals)
+            append!(coglist, sample(rng, set, n; replace = false))
+            if moreinfo
+                append!(degrees, fill(d, n))
+                append!(realness, fill(rl, n))
+            end
         end
-        
-        # total wanted up to this point (wholly determined by dvals)
-        ws += rw
-
-        #=
-        add number actually sampled
-        including possibly extra for gap -> rnum will include the portion of the gap that has been filled 
-        We simply want to add the number sampled, to know whether we have closed the gap, and need to continue
-        to overample)
-        =#
-        ts += rnum
     end
-
-    #=
-    the gap (if any left over across all of the true ties) carries over to
-    the fake tie sampling.
-    =#
-
-    # fake ties
-    for (sz, d) in zip(desired, dvals)
-        fw = sz[2] # fake wanted
-
-        # setup: get the relevant object from which to sample
-
-        fakeset = mk_binset(bins, d, false)
-
-        # execution: perform sampling, adjusting for ws and ts
-
-        gap = ws - ts # num. units still wanted (try to pick these up)
-        
-        fnum = min(length(fakeset), fw + gap)
-        append!(coglist, sample(rng, fakeset, fnum; replace = false))
-
-        if moreinfo
-            append!(degrees, fill(d, fnum))
-            append!(realness, fill(false, fnum))
-        end
-
-        ws += fw # total wanted up to this point
-        ts += fnum # add number actually sampled
-    end
+    return nothing
 end

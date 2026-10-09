@@ -125,22 +125,7 @@ function samplenetwork(
     _checkspec(desired, dvals)
     dₘₐₓ = maximum(maximum, dvals)
 
-    # every node must have a consent status
-    missingnames = [
-        nm for nm in (get_prop(graph, v, :name) for v in vertices(graph))
-        if !haskey(consents, nm)
-    ]
-    isempty(missingnames) || throw(ArgumentError(
-        "consents has no entry for $(length(missingnames)) node(s), " *
-        "e.g., $(first(missingnames))"
-    ))
-
-    # ... and it cannot be `missing`
-    missingvals = [nm for nm in keys(consents) if ismissing(consents[nm])]
-    isempty(missingvals) || throw(ArgumentError(
-        "consents has missing values for $(length(missingvals)) node(s), " *
-        "e.g., $(first(missingvals))"
-    ))
+    _checkconsents(graph, consents)
 
     verticeslists = verticeslist(moreinfo)
 
