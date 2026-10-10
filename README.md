@@ -1,5 +1,12 @@
 # SamplingPerceivedNetworks.jl
 
+[![Docs: dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://human-nature-lab.github.io/SamplingPerceivedNetworks.jl/dev/)
+[![CI](https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl/actions/workflows/CI.yml)
+[![Documentation](https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl/actions/workflows/Docs.yml/badge.svg?branch=main)](https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl/actions/workflows/Docs.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![Julia 1.10+](https://img.shields.io/badge/julia-1.10%2B-9558B2.svg)](https://julialang.org)
+[![R interface: psnr](https://img.shields.io/badge/R%20interface-psnr-276DC3.svg)](https://github.com/emfeltham/psnr)
+
 A Julia package for the distance-based sampling procedure used to collect cognitive social structures (CSS) data. It generates stratified lists of real and counterfactual relationships within a perceiver's social orbit: the network neighborhood out to a specified distance from the perceiver.
 
 ![](figure.png)
@@ -83,6 +90,10 @@ See `example.jl` for a complete working example using a Watts-Strogatz small-wor
 - `psn_edgelists(vertlists)` - Convert sampling output to DataFrame edgelist (columns `perceiver`, `from`, `to`, and with `moreinfo = true`, `bin` and `real`; `bin` is `"outer"` or `"fill"` for pairs from the outer bin or the fill)
 - `edgelist(graph)` - Extract sociocentric edgelist from graph
 - `tupleize(alters1, alters2; sort = false)` - Create tuples from edgelist columns, alphanumerically sorted within each pair if `sort` is true
+
+## Use from R
+
+An R interface, [psnr](https://github.com/emfeltham/psnr), wraps `samplenetwork` and `inclusionprobs` through JuliaCall.
 
 ## Tests
 

@@ -23,6 +23,10 @@ using Pkg
 Pkg.add(url = "https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl")
 ```
 
+From R, the [psnr](https://github.com/emfeltham/psnr) package
+([documentation](https://emfeltham.github.io/psnr/)) wraps
+[`samplenetwork`](@ref) and [`inclusionprobs`](@ref).
+
 ## Pipeline
 
 1. [`vertexorbit`](@ref) builds the perceiver's orbit, with real and counterfactual ties.
