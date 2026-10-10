@@ -7,19 +7,23 @@ authors = ["Eric Martin Feltham <eric.feltham@yale.edu>"]
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 MetaGraphs = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
+RCall = "6f49c342-dc21-5d91-9882-a32aef131414"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+Suppressor = "fd094767-a336-5f1f-9728-57cf17d0bbfb"
+
+[compat]
+DataFrames = "1.8"
+Graphs = "1.15"
+MetaGraphs = "0.9"
+RCall = "0.14.14"
+Random = "1"
+StatsBase = "0.34"
+Suppressor = "0.2.8"
+julia = "1.10"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test"]
-
-[compat]
-DataFrames = "1.8"
-Graphs = "1.15"
-MetaGraphs = "0.9"
-Random = "1"
-StatsBase = "0.34"
-julia = "1.10"
