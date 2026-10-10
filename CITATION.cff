@@ -1,10 +1,7 @@
 # Citation metadata for the software. GitHub shows it as "Cite this repository";
 # Zenodo reads it when a GitHub release is archived.
-# TODO before the first archived release:
-#   - add the author's ORCID (orcid: "https://orcid.org/XXXX-XXXX-XXXX-XXXX") and affiliation;
-#   - add coauthors/contributors if any should be credited for the software;
-#   - set date-released to the release date (and keep version in step with Project.toml);
-#   - after Zenodo mints the DOI, add it under "identifiers" (the concept DOI, which resolves to the latest version).
+# Keep version and date-released in step with Project.toml at each release.
+# After Zenodo mints the DOI, add the concept DOI (which resolves to the latest version) under "identifiers".
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below, and cite Feltham, Forastiere and Christakis (2025) for the method."
 type: software
@@ -18,7 +15,10 @@ abstract: >-
 authors:
   - family-names: Feltham
     given-names: Eric Martin
+    affiliation: "Yale University"
+    orcid: "https://orcid.org/0000-0001-8080-7119"
 version: 2.0.0
+date-released: "2026-10-10"
 license: MIT
 repository-code: "https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl"
 url: "https://human-nature-lab.github.io/SamplingPerceivedNetworks.jl"
