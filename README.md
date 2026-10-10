@@ -1,5 +1,6 @@
 # SamplingPerceivedNetworks.jl
 
+[![Docs: stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://human-nature-lab.github.io/SamplingPerceivedNetworks.jl/stable/)
 [![Docs: dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://human-nature-lab.github.io/SamplingPerceivedNetworks.jl/dev/)
 [![CI](https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl/actions/workflows/CI.yml)
 [![Documentation](https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl/actions/workflows/Docs.yml/badge.svg?branch=main)](https://github.com/human-nature-lab/SamplingPerceivedNetworks.jl/actions/workflows/Docs.yml)
